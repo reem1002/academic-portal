@@ -1,7 +1,6 @@
 .pr-container {
-  padding: 30px;
+  padding: 0 40px;
   max-width: 1000px;
-  margin: auto;
 }
 
 .pr-title {
@@ -23,9 +22,6 @@
   margin-bottom: 20px;
 }
 
-.pr-tabs {
-  margin-bottom: 20px;
-}
 
 .pr-tab-btn {
   margin-right: 10px;
@@ -62,6 +58,8 @@
 }
 
 .pr-action-btn {
+background-color: transparent;
+border: none;
   padding: 6px 12px;
   cursor: pointer;
 }
@@ -143,3 +141,41 @@
    color:#f74f4f ;
 }
 
+.pr-submit-btn{
+    margin-top: 30px;
+    width: 25%;
+    padding: 15px 30px;
+    background-color: #3872f0;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.pr-filters {
+    display: flex;
+    gap: 12px;
+    margin: 15px 0;
+    align-items: center;
+}
+
+.pr-search-input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.pr-select {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.regHeader{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
