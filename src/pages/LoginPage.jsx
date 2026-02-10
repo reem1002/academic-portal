@@ -11,11 +11,9 @@ const LoginPage = () => {
         const user = {
             name,
             role,
-            isGraduate: false, // الطالب يقدر يحدد بعدين
+            isGraduate: false, 
         };
         localStorage.setItem("currentUser", JSON.stringify(user));
-
-        // Redirect لكل اليوزرين على Dashboard أول حاجة
         navigate("/");
     };
 

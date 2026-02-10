@@ -65,9 +65,7 @@ const HODCoursesPage = () => {
         setCourses(prev => prev.map(c => c.code === code ? { ...c, enabled: !c.enabled } : c));
     };
 
-    const updateCapacity = (code, value) => {
-        setCourses(prev => prev.map(c => c.code === code ? { ...c, capacity: Number(value) } : c));
-    };
+
 
     const publishCourses = () => {
         const now = new Date();
@@ -154,7 +152,7 @@ const HODCoursesPage = () => {
                         <th>Level</th>
                         <th>Credits</th>
                         <th>Type</th>
-                        <th>Capacity</th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -172,15 +170,7 @@ const HODCoursesPage = () => {
                             <td>{course.level}</td>
                             <td>{course.credits}</td>
                             <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
-                            <td>
-                                <input
-                                    type="number"
-                                    value={course.capacity}
-                                    disabled={!course.enabled}
-                                    onChange={(e) => updateCapacity(course.code, e.target.value)}
-                                    className="hod-capacity-input"
-                                />
-                            </td>
+
                         </tr>
                     ))}
                 </tbody>
