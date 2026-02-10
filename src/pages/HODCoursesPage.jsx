@@ -7,102 +7,141 @@ const HODCoursesPage = () => {
     const navigate = useNavigate();
 
     const [courses, setCourses] = useState([]);
+    const [preRegDays, setPreRegDays] = useState(7);
+    const [registrationInfo, setRegistrationInfo] = useState(null);
+
     const [searchTerm, setSearchTerm] = useState("");
-    const [typeFilter, setTypeFilter] = useState("All");
     const [levelFilter, setLevelFilter] = useState("All");
-    const [preRegDays, setPreRegDays] = useState(7); // مدة التسجيل المبدئي
+    const [typeFilter, setTypeFilter] = useState("All");
+    const [statusFilter, setStatusFilter] = useState("All"); // All, Opened, Closed
+
+    const [countdown, setCountdown] = useState("");
 
     useEffect(() => {
-        // جلب المواد السابقة أو إنشاء نسخة جديدة من bylawCourses
+        // نجيب المواد المفتوحة فقط من الترم الحالي أو نبدأ من الصفر
         const savedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
-        const mergedCourses = bylawCourses.map(c => {
-            const saved = savedCourses.find(sc => sc.code === c.code);
-            return {
-                ...c,
-                enabled: saved ? saved.enabled : false,
-                capacity: saved ? saved.capacity : 50
-            };
-        });
-        setCourses(mergedCourses);
+        setCourses(savedCourses.length > 0 ? savedCourses : bylawCourses.map(c => ({ ...c, enabled: false, capacity: 50 })));
+
+        const preReg = JSON.parse(localStorage.getItem("preRegistrationInfo"));
+        if (preReg && preReg.status === "open") setRegistrationInfo(preReg);
     }, []);
+
+    useEffect(() => {
+        if (!registrationInfo || registrationInfo.status !== "open") return;
+        const interval = setInterval(() => {
+            const now = new Date();
+            const endDate = new Date(registrationInfo.endDate);
+            const diff = endDate - now;
+
+            if (diff <= 0) {
+                clearInterval(interval);
+                setCountdown("Registration closed!");
+                handleRegistrationEnd();
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [registrationInfo]);
+
+    const handleRegistrationEnd = () => {
+        setCourses(prev => prev.map(c => ({ ...c, enabled: false })));
+        localStorage.removeItem("preRegistrationInfo");
+        localStorage.removeItem("openedCourses");
+        setRegistrationInfo(null);
+        alert("Pre-registration has ended.");
+    };
+
+
 
     const toggleCourse = (code) => {
         setCourses(prev => prev.map(c => c.code === code ? { ...c, enabled: !c.enabled } : c));
     };
 
     const updateCapacity = (code, value) => {
-        setCourses(prev => prev.map(c => c.code === code ? { ...c, capacity: value } : c));
+        setCourses(prev => prev.map(c => c.code === code ? { ...c, capacity: Number(value) } : c));
     };
 
     const publishCourses = () => {
-        const openedCourses = courses.filter(c => c.enabled);
+        const now = new Date();
+        const endDate = new Date();
+        endDate.setDate(now.getDate() + preRegDays);
 
-        const existingPreReg = JSON.parse(localStorage.getItem("preRegistrationInfo"));
-
-        let publishDate = existingPreReg?.publishDate || new Date().toISOString();
-        let durationDays = preRegDays;
-
-        // لو فيه preRegInfo موجودة بالفعل، نخلي التاريخ القديم والمدة القديمة إلا لو الدكتور غيرها
-        if (existingPreReg) {
-            publishDate = existingPreReg.publishDate;
-            durationDays = preRegDays; // الدكتور يقدر يغيرها لو حب
-        }
-
+        const info = { status: "open", publishDate: now.toISOString(), endDate: endDate.toISOString() };
         localStorage.setItem("openedCourses", JSON.stringify(courses));
-        localStorage.setItem("preRegistrationInfo", JSON.stringify({
-            publishDate,
-            durationDays
-        }));
+        localStorage.setItem("preRegistrationInfo", JSON.stringify(info));
 
-        alert(`Courses published! Pre-registration is open for ${durationDays} days.`);
+        setRegistrationInfo(info);
+        alert(`Courses published! Pre-registration is open for ${preRegDays} days.`);
     };
 
+    const closeRegistrationNow = () => {
+        handleRegistrationEnd();
+        alert("Pre-registration closed immediately.");
+    };
 
-    // فلترة + بحث + ترتيب المواد المفتوحة أولًا
     const filteredCourses = courses
-        .filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        .filter(c => typeFilter === "All" || (typeFilter === "Mandatory" ? c.mandatory : !c.mandatory))
+        .filter(c => searchTerm === "" || c.name.toLowerCase().includes(searchTerm.toLowerCase()))
         .filter(c => levelFilter === "All" || c.level === levelFilter)
-        .sort((a, b) => b.enabled - a.enabled); // المواد المفتوحة أولًا
+        .filter(c => typeFilter === "All" || (typeFilter === "Mandatory" ? c.mandatory : !c.mandatory))
+        .filter(c => statusFilter === "All" || (statusFilter === "Opened" ? c.enabled : !c.enabled))
+        .sort((a, b) => b.enabled - a.enabled);
 
     return (
         <div className="hod-container">
             <h2>Head of Department – Course Management</h2>
-            <p className="hod-note">
-                Select courses to open for the upcoming semester. Pre-registration duration:{" "}
-                <input
-                    type="number"
-                    value={preRegDays}
-                    min={1}
-                    max={30}
-                    onChange={(e) => setPreRegDays(Number(e.target.value))}
-                    style={{ width: "50px" }}
-                />{" "}
-                days (default 7)
-            </p>
 
-            {/* Filters */}
+            {registrationInfo && registrationInfo.status === "open" ? (
+                <div className="preReg-banner">
+                    Pre-registration is OPEN! Ends in: <strong>{countdown}</strong>
+                    <button className="close-now-btn" onClick={closeRegistrationNow}>Close Now</button>
+                </div>
+            ) : (
+                <p className="hod-note">
+                    Select courses to open for the upcoming semester. Pre-registration duration:{" "}
+                    <input
+                        type="number"
+                        value={preRegDays}
+                        min={1}
+                        max={30}
+                        onChange={(e) => setPreRegDays(Number(e.target.value))}
+                        style={{ width: "50px" }}
+                    />{" "}
+                    days
+                </p>
+            )}
+
             <div className="hod-filters">
                 <input
                     type="text"
+                    className="hod-search-input"
                     placeholder="Search by course name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="hod-search-input"
                 />
-
-                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                    <option value="All">All Types</option>
-                    <option value="Mandatory">Mandatory</option>
-                    <option value="Elective">Elective</option>
-                </select>
-
                 <select value={levelFilter} onChange={(e) => setLevelFilter(e.target.value)}>
                     <option value="All">All Levels</option>
                     <option value="Freshman">Freshman</option>
                     <option value="Sophomore">Sophomore</option>
                     <option value="Junior">Junior</option>
                     <option value="Senior">Senior</option>
+                </select>
+                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                    <option value="All">All Types</option>
+                    <option value="Mandatory">Mandatory</option>
+                    <option value="Elective">Elective</option>
+                </select>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                    <option value="All">All Status</option>
+                    <option value="Opened">Opened</option>
+                    <option value="Closed">Closed</option>
                 </select>
             </div>
 
@@ -147,10 +186,13 @@ const HODCoursesPage = () => {
                 </tbody>
             </table>
 
-            <button className="hod-publish-btn" onClick={publishCourses}>Publish Courses</button>
+            <button className="hod-publish-btn" onClick={publishCourses}>
+                {registrationInfo && registrationInfo.status === "open" ? "Update Courses" : "Publish Courses"}
+            </button>
+
             <button
                 className="hod-publish-btn"
-                style={{ marginLeft: "10px" }}
+                style={{ marginLeft: "50px" }}
                 onClick={() => navigate("/student-selections")}
             >
                 View Student Selections

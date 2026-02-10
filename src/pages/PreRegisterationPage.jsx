@@ -10,8 +10,9 @@ const PreRegistrationPage = () => {
     const [isGraduating, setIsGraduating] = useState(false);
     const [activeLevel, setActiveLevel] = useState("Freshman");
     const [registrationEnd, setRegistrationEnd] = useState(null);
+    const [countdown, setCountdown] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
-    const [typeFilter, setTypeFilter] = useState("All"); // All | Mandatory | Elective
+    const [typeFilter, setTypeFilter] = useState("All");
 
     const levels = ["Freshman", "Sophomore", "Junior", "Senior"];
     const maxCredits = 18;
@@ -20,63 +21,85 @@ const PreRegistrationPage = () => {
         const opened = JSON.parse(localStorage.getItem("openedCourses")) || [];
         setOpenedCourses(opened);
 
-        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        const preRegInfo = JSON.parse(localStorage.getItem("preRegistrationInfo"));
+        if (preRegInfo && preRegInfo.status === "open") {
+            setRegistrationEnd(new Date(preRegInfo.endDate));
 
-        // جميع اختيارات الطالب من الـ studentSelections
-        const selections = JSON.parse(localStorage.getItem("studentSelections")) || [];
-        const userSelections = selections.filter(s => s.studentName === currentUser.name);
-
-        // المواد المقترحة (لكن بدون المواد المفتوحة من الدكتور)
-        const proposed = bylawCourses.filter(
-            c => !opened.some(o => o.code === c.code)
-        );
-
-        // دمج الـ selectedCourses مع أي اختيارات سابقة للطالب
-        setSelectedCourses([...userSelections]);
-
-        // حالة التخرج
-        setIsGraduating(userSelections.some(s => s.isGraduate));
-
-        // معلومات انتهاء Pre-registration
-        const preRegInfo = JSON.parse(localStorage.getItem("preRegistrationInfo")) || {};
-        if (preRegInfo.end) {
-            setRegistrationEnd(new Date(preRegInfo.end));
+            // جلب اختيارات الطالب لو التسجيل مفتوح فقط
+            const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+            const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+            const userSelections = allSelections.filter(s => s.studentName === currentUser.name);
+            setSelectedCourses(userSelections);
+            if (userSelections.length > 0) {
+                setIsGraduating(userSelections[0].isGraduate || false);
+            }
         } else {
-            const endDate = new Date();
-            endDate.setDate(endDate.getDate() + 7);
-            setRegistrationEnd(endDate);
-            localStorage.setItem("preRegistrationInfo", JSON.stringify({ end: endDate }));
+            // لو التسجيل مقفول، ما نجيبش اختيارات الطالب للعرض
+            setSelectedCourses([]);
         }
     }, []);
 
-    const canModify = () => {
-        if (!registrationEnd) return false;
-        return new Date() <= registrationEnd;
+
+    // كاونت داون للتسجيل
+    useEffect(() => {
+        if (!registrationEnd) return;
+
+        const interval = setInterval(() => {
+            const now = new Date();
+            const diff = registrationEnd - now;
+
+            if (diff <= 0) {
+                clearInterval(interval);
+                handleRegistrationEnd();
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+            setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [registrationEnd]);
+
+    const canModify = () => registrationEnd && new Date() <= registrationEnd;
+
+    const handleRegistrationEnd = () => {
+        setRegistrationEnd(null);
+        setCountdown("");
+        // مسح اختيارات الطالب عند انتهاء التسجيل
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+        const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
+        localStorage.setItem("studentSelections", JSON.stringify(updatedSelections));
+        setSelectedCourses([]);
+        alert("Pre-registration has ended.");
     };
 
-    // إضافة مادة
     const addCourse = (course) => {
         if (!course || !canModify()) return;
-
         const totalCredits = selectedCourses.reduce((sum, c) => sum + c.credits, 0);
         if (totalCredits + course.credits > maxCredits) {
             return alert("You exceeded the maximum allowed credits");
         }
-
         if (!selectedCourses.some(c => c.code === course.code)) {
-            setSelectedCourses([...selectedCourses, course]);
+            const newSelection = [...selectedCourses, course];
+            setSelectedCourses(newSelection);
+            saveToLocalStorage(newSelection);
         }
     };
 
-    // إزالة مادة
     const removeCourse = (code) => {
         if (!canModify()) return;
-        setSelectedCourses(selectedCourses.filter(c => c.code !== code));
+        const newSelection = selectedCourses.filter(c => c.code !== code);
+        setSelectedCourses(newSelection);
+        saveToLocalStorage(newSelection);
     };
 
-    // حفظ التسجيل
     const submitSelection = () => {
-        const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
         const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
         const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
 
@@ -90,12 +113,24 @@ const PreRegistrationPage = () => {
         alert("Your pre-registration has been saved!");
     };
 
-    // المواد المفتوحة للمستوى الحالي
+    const saveToLocalStorage = (courses) => {
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+        const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
+
+        const newSelections = courses.map(c => ({
+            studentName: currentUser.name,
+            isGraduate: isGraduating,
+            ...c
+        }));
+
+        localStorage.setItem("studentSelections", JSON.stringify([...updatedSelections, ...newSelections]));
+    };
+
+    // المواد المفتوحة
     const filteredOpenedCourses = openedCourses
         .filter(course => course.level === activeLevel)
-        .filter(course =>
-            course.name.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        .filter(course => course.name.toLowerCase().includes(searchTerm.toLowerCase()))
         .filter(course => {
             if (typeFilter === "All") return true;
             if (typeFilter === "Mandatory") return course.mandatory;
@@ -103,20 +138,32 @@ const PreRegistrationPage = () => {
             return true;
         });
 
-
-    // Proposed Courses (كل الـ bylawCourses مش مفتوحة من الدكتور)
+    // المواد المقترحة
     const proposedCourses = bylawCourses.filter(
-        c =>
-            !openedCourses.some(o => o.code === c.code) &&
-            !selectedCourses.some(s => s.code === c.code)
+        c => !openedCourses.some(o => o.code === c.code) && !selectedCourses.some(s => s.code === c.code)
     );
+
+    if (!registrationEnd) {
+        return (
+            <div className="pr-container">
+                <h2>Academic Pre-Registration</h2>
+                <div className="pr-closed-box">
+                    Pre-registration is currently closed. <br />
+                    Please wait until the department opens registration.
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="pr-container">
             <h2 className="pr-title">Academic Pre-Registration</h2>
-            <p className="pr-note">
-                This is a <strong>pre-registration</strong>, not the official university registration.
-            </p>
+
+            {registrationEnd && (
+                <div className="pr-banner">
+                    Pre-registration is OPEN! Ends in: <strong>{countdown}</strong>
+                </div>
+            )}
 
             <p className="pr-credits">
                 Selected Credits: <strong>{selectedCourses.reduce((sum, c) => sum + c.credits, 0)}</strong> / {maxCredits}
@@ -126,24 +173,12 @@ const PreRegistrationPage = () => {
                 <input
                     type="checkbox"
                     checked={isGraduating}
-                    disabled={!canModify()}
                     onChange={() => setIsGraduating(!isGraduating)}
                 />{" "}
                 I am a graduating student
             </label>
 
-            <p>
-                {registrationEnd && (
-                    <em>
-                        Pre-registration closes on: {registrationEnd.toLocaleString()}
-                        {!canModify() && " (Registration period ended)"}
-                    </em>
-                )}
-            </p>
-
             <div className="regHeader">
-
-                {/* Tabs حسب المستوى */}
                 <div className="pr-tabs">
                     {levels.map(level => (
                         <button
@@ -156,7 +191,6 @@ const PreRegistrationPage = () => {
                     ))}
                 </div>
 
-                {/* Filters */}
                 <div className="pr-filters">
                     <input
                         type="text"
@@ -165,12 +199,7 @@ const PreRegistrationPage = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pr-search-input"
                     />
-
-                    <select
-                        value={typeFilter}
-                        onChange={(e) => setTypeFilter(e.target.value)}
-                        className="pr-select"
-                    >
+                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="pr-select">
                         <option value="All">All Types</option>
                         <option value="Mandatory">Mandatory</option>
                         <option value="Elective">Elective</option>
@@ -178,7 +207,6 @@ const PreRegistrationPage = () => {
                 </div>
             </div>
 
-            {/* جدول المواد المفتوحة */}
             <h4>Opened Courses</h4>
             <table className="pr-table">
                 <thead>
@@ -193,15 +221,14 @@ const PreRegistrationPage = () => {
                 <tbody>
                     {filteredOpenedCourses.map(course => {
                         const selected = selectedCourses.some(c => c.code === course.code);
+                        const isOpened = openedCourses.some(o => o.code === course.code && o.enabled);
+
                         return (
-                            <tr
-                                key={course.code}
-                                className={selected ? "pr-row-selected" : ""}
+                            <tr key={course.code}
                                 style={{
-                                    backgroundColor: selected ? "#d1f0d1" : "", // اللون الأخضر الخفيف للمواد المختارة
-                                    fontWeight: selected ? "bold" : "normal"   // الخط العريض كمان للتمييز
-                                }}
-                            >
+                                    backgroundColor: isOpened ? "#d1f0d1" : "",
+                                    fontWeight: isOpened ? "bold" : "normal"
+                                }}>
                                 <td>{course.code}</td>
                                 <td>{course.name}</td>
                                 <td>{course.credits}</td>
@@ -209,21 +236,18 @@ const PreRegistrationPage = () => {
                                 <td>
                                     <button
                                         className="pr-action-btn"
-                                        disabled={!canModify()}
                                         onClick={() => selected ? removeCourse(course.code) : addCourse(course)}
                                     >
-                                        {selected ? <FiTrash2 size={16} /> : <FiPlus size={18} />} {/* بدل "Add" أيقونة زائد */}
+                                        {selected ? <FiTrash2 size={16} /> : <FiPlus size={18} />}
                                     </button>
                                 </td>
                             </tr>
-                        );
+                        )
                     })}
                 </tbody>
             </table>
 
-
-            {/* Dropdown لإضافة مواد مقترحة */}
-            {proposedCourses.length > 0 && canModify() && (
+            {proposedCourses.length > 0 && (
                 <div className="pr-dropdown">
                     <h4>Propose a Course</h4>
                     <select
@@ -237,59 +261,39 @@ const PreRegistrationPage = () => {
                             </option>
                         ))}
                     </select>
-                    <button
-                        onClick={() => {
-                            const course = bylawCourses.find(c => c.code === selectedDropdownCourse);
-                            addCourse(course);
-                            setSelectedDropdownCourse("");
-                        }}
-                    >
-                        Add Course
-                    </button>
+                    <button onClick={() => {
+                        const course = bylawCourses.find(c => c.code === selectedDropdownCourse);
+                        addCourse(course);
+                        setSelectedDropdownCourse("");
+                    }}>Add Course</button>
                 </div>
             )}
 
-            <hr />
-
-            {/* جدول المواد المختارة */}
-            <h4 className="pr-selected-title">Selected Courses</h4>
+            <h4>Selected Courses</h4>
             {selectedCourses.length === 0 ? (
                 <p className="no-courses-msg">No courses selected yet.</p>
             ) : (
                 <div className="selected-courses-table">
-                    <div className="table-header">
-                        <span>Course Name</span>
-                        <span>Code</span>
-                        <span>Credits</span>
-                        <span>Type</span>
-                        {canModify() && <span>Action</span>}
-                    </div>
-
                     {selectedCourses.map(c => (
                         <div key={c.code} className="table-row">
                             <span>{c.name}</span>
                             <span>{c.code}</span>
                             <span>{c.credits} credits</span>
                             <span>{c.mandatory ? "Mandatory" : "Elective"}</span>
-                            {canModify() && (
-                                <button className="remove-btn" onClick={() => removeCourse(c.code)}>
-                                    <FiTrash2 size={18} />
-                                </button>
-                            )}
+                            <button className="remove-btn" onClick={() => removeCourse(c.code)}>
+                                <FiTrash2 size={18} />
+                            </button>
                         </div>
                     ))}
                 </div>
             )}
 
-            <button
-                className="pr-submit-btn"
-                onClick={submitSelection}
-                disabled={!canModify() || selectedCourses.length === 0}
-            >
+
+            <button className="pr-submit-btn" onClick={submitSelection} disabled={selectedCourses.length === 0}>
                 Save Pre-Registration
             </button>
         </div>
-    );
-};
+    )
+}
 
 export default PreRegistrationPage;

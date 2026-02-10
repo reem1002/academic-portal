@@ -11,6 +11,7 @@
 
 .hod-filters {
   display: flex;
+  flex-direction: row-reverse;
   gap: 15px;
   margin-bottom: 20px;
   align-items: center;
@@ -57,7 +58,31 @@
 
 .hod-publish-btn {
   margin-top: 20px;
-  padding: 10px 20px;
+  padding: 12px 20px;
   font-size: 16px;
   cursor: pointer;
+  background-color:#3872f0;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.hod-publish-btn:hover{
+    transform: scale(1.05);
+    transition: all ease-in-out;
+}
+
+
+.close-now-btn{
+    margin-left: 40px;
+    background-color: #dc2626;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+.close-now-btn:hover{
+    transform: scale(1.05);
+    transition: all ease-in-out;
 }

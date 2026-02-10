@@ -3,15 +3,13 @@ import "./styles/StudentSelectionsPage.css";
 
 const StudentSelectionsPage = () => {
     const [courseStats, setCourseStats] = useState([]);
-    const [filterStatus, setFilterStatus] = useState("all"); // all, opened, proposed
+    const [filterStatus, setFilterStatus] = useState("all");
     const [searchTerm, setSearchTerm] = useState("");
 
-    // Modal state
     const [showExportModal, setShowExportModal] = useState(false);
-
-    // إعدادات التقرير
-    const [reportType, setReportType] = useState("all"); // all, aboveMin, aboveMinOrGraduates
+    const [reportType, setReportType] = useState("all");
     const [minStudents, setMinStudents] = useState(25);
+
     const allColumns = [
         "Course Code",
         "Course Name",
@@ -20,7 +18,8 @@ const StudentSelectionsPage = () => {
         "Minimum Students",
         "Type",
         "Credits",
-        "Level"
+        "Level",
+        "Status"
     ];
     const [selectedColumns, setSelectedColumns] = useState([...allColumns]);
 
@@ -28,23 +27,31 @@ const StudentSelectionsPage = () => {
         const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
 
-        const allCourses = [...openedCourses, ...studentSelections].reduce((acc, curr) => {
-            if (!acc.some(c => c.code === curr.code)) acc.push(curr);
-            return acc;
-        }, []);
+        // جلب المواد التي اختارها أي طالب فقط
+        const coursesGrouped = {};
+        studentSelections.forEach(s => {
+            if (!coursesGrouped[s.code]) coursesGrouped[s.code] = [];
+            coursesGrouped[s.code].push(s);
+        });
 
-        const stats = allCourses.map(c => {
-            const students = studentSelections.filter(s => s.code === c.code);
+        const coursesWithStats = Object.keys(coursesGrouped).map(code => {
+            const students = coursesGrouped[code];
+            const openedCourse = openedCourses.find(c => c.code === code);
+
             return {
-                ...c,
+                code,
+                name: openedCourse ? openedCourse.name : students[0].name,
+                credits: openedCourse ? openedCourse.credits : students[0].credits || 0,
+                level: openedCourse ? openedCourse.level : students[0].level || "Unknown",
+                mandatory: openedCourse ? openedCourse.mandatory : students[0].mandatory || false,
                 students,
                 count: students.length,
                 graduateCount: students.filter(s => s.isGraduate).length,
-                isOpened: openedCourses.some(o => o.code === c.code)
+                isOpened: openedCourse ? openedCourse.enabled : false, // false لو مقترحة
             };
         });
 
-        setCourseStats(stats);
+        setCourseStats(coursesWithStats);
     }, []);
 
     const handleGenerateCSV = () => {
@@ -72,6 +79,7 @@ const StudentSelectionsPage = () => {
                     case "Type": return c.mandatory ? "Mandatory" : "Elective";
                     case "Credits": return c.credits;
                     case "Level": return c.level;
+                    case "Status": return c.isOpened ? "Opened" : "Proposed";
                     default: return "";
                 }
             }).join(",");
@@ -98,7 +106,6 @@ const StudentSelectionsPage = () => {
         <div className="student-report-container">
             <h2>Student Selections Report</h2>
 
-            {/* فلترة وبحث */}
             <div className="filters-container">
                 <div className="filters">
                     <label>
@@ -126,7 +133,6 @@ const StudentSelectionsPage = () => {
                 </button>
             </div>
 
-            {/* Modal */}
             {showExportModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
@@ -175,10 +181,13 @@ const StudentSelectionsPage = () => {
                 </div>
             )}
 
-            {/* عرض المواد */}
             {filteredCourses.map(c => (
-                <div key={c.code} className="course-section">
-                    <strong>{c.name} ({c.code})</strong> - Total Students: {c.count}, Graduates: {c.graduateCount} {c.isOpened ? "(Opened)" : "(Proposed)"}
+                <div
+                    key={c.code}
+                    className="course-section"
+                    style={{ backgroundColor: c.isOpened ? "transparent" : "#f8f7ed", padding: "10px", borderRadius: "5px", marginBottom: "10px" }}
+                >
+                    <strong>{c.name} ({c.code})</strong> - Total Students: {c.count}, Graduates: {c.graduateCount} ({c.isOpened ? "Opened" : "Proposed"})
 
                     {c.students.length === 0 ? (
                         <p>No students registered yet.</p>
