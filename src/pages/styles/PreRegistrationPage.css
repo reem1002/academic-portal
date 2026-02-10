@@ -1,0 +1,145 @@
+.pr-container {
+  padding: 30px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.pr-title {
+  margin-bottom: 10px;
+}
+
+.pr-note {
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.pr-credits {
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.pr-checkbox {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.pr-tabs {
+  margin-bottom: 20px;
+}
+
+.pr-tab-btn {
+  margin-right: 10px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.pr-tab-btn.active {
+  background: #007bff;
+  color: #fff;
+}
+
+.pr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pr-table th,
+.pr-table td {
+  border: 1px solid #ccc;
+  padding: 10px;
+  text-align: left;
+}
+
+.pr-table thead {
+  background: #f0f0f0;
+}
+
+.pr-row-selected {
+  background: #e6f7ff;
+}
+
+.pr-action-btn {
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.pr-selected-title {
+  margin-top: 20px;
+}
+
+.pr-submit-btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+/* Selected Courses Section */
+/* Selected Courses Section */
+.pr-selected-title {
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.no-courses-msg {
+    font-style: italic;
+    color: #666;
+}
+
+/* Table-like container */
+.selected-courses-table {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5 أعمدة، آخر واحد للزر */
+    gap: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Header row */
+.selected-courses-table .table-header {
+    display: contents; /* يجعل الأعمدة تتبع grid مباشرة */
+    background-color: #f3f4f6;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Header cells */
+.selected-courses-table .table-header span {
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Data rows */
+.selected-courses-table .table-row {
+    display: contents; /* الأعمدة داخل grid */
+}
+
+/* Data cells */
+.selected-courses-table .table-row span {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+/* Remove button */
+.remove-btn {
+    width: fit-content;
+    margin: 5px;
+    background-color:transparent;
+    color:#dc2626 ;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.remove-btn:hover {
+   color:#f74f4f ;
+}
+

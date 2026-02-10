@@ -1,0 +1,247 @@
+.student-report-container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 20px;
+    color: #333;
+}
+
+.student-report-container h2 {
+    margin-bottom: 25px;
+    color: #1f2937; /* داكن للعنوان */
+}
+
+.filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+
+}
+
+.filters-container input[type="text"] {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.filters-container .filters select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.export-btn {
+    padding: 8px 16px;
+    background-color: #3872f0;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+    align-self:flex-start !important; 
+}
+
+.export-btn:hover {
+    background-color: #1d4ed8; /* أزرق غامق عند hover */
+}
+
+.course-section {
+    margin-bottom: 30px;
+    padding: 15px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background-color: #fafafa;
+}
+
+.course-section strong {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 10px;
+    color: #111827;
+}
+
+.course-table-container {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #d1d5db;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.course-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.course-table th,
+.course-table td {
+    border: 1px solid #d1d5db;
+    padding: 8px 12px;
+    text-align: left;
+}
+
+.course-table thead {
+    background: #f3f4f6;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.course-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+.course-table tbody tr:hover {
+    background-color: #e0f2fe; /* لون فاتح عند hover */
+}
+
+.course-table th {
+    font-weight: 600;
+    color: #374151;
+}
+
+.course-table td {
+    color: #1f2937;
+}
+
+/* Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* شفاف خفيف للخلفية */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+/* المودال الرئيسي */
+.modal-content {
+    background: #fff;
+    padding: 30px 25px;
+    width: 600px;
+    max-width: 95%;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    font-family: Arial, sans-serif;
+    color: #333;
+    animation: fadeIn 0.25s ease-in-out;
+}
+
+/* عنوان المودال */
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 22px;
+    text-align: center;
+}
+
+/* الأقسام داخل المودال */
+.modal-content div {
+    margin-bottom: 15px;
+}
+
+/* Labels داخل خيارات التقرير */
+.modal-content label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+     margin-top: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+
+/* Inputs و Checkboxes */
+.modal-content input[type="number"],
+.modal-content input[type="text"] {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    margin-left: 8px;
+    width: 70px;
+    font-size: 14px;
+}
+
+.modal-content input[type="checkbox"],
+.modal-content input[type="radio"] {
+    margin-right: 6px;
+    accent-color: #1a73e8; /* اللون الأزرق الحديث للcheck */
+}
+
+/* Columns list */
+.modal-content .columns-container {
+    display: flex;
+    flex-wrap: wrap;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+/* كل عمود */
+.modal-content .columns-container label {
+    width: 45%;
+    margin-bottom: 6px;
+}
+
+/* أزرار المودال */
+.modal-content .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.modal-content button {
+    padding: 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.modal-content button:hover {
+    opacity: 0.9;
+}
+
+.modal-content button:first-child {
+    background: #eee;
+    color: #333;
+}
+
+.modal-content button:last-child {
+    background: #1a73e8;
+    color: #fff;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(-20px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .course-table-container {
+        max-height: 200px;
+    }
+}
