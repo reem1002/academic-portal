@@ -1,220 +1,242 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import "./styles/StudentSelectionsPage.css";
 
 const StudentSelectionsPage = () => {
-    const [courseStats, setCourseStats] = useState([]);
-    const [filterStatus, setFilterStatus] = useState("all");
+    const [coursesData, setCoursesData] = useState([]);
+    const [activeLevel, setActiveLevel] = useState("All");
     const [searchTerm, setSearchTerm] = useState("");
+    const [typeFilter, setTypeFilter] = useState("All");
+    const [visibleCount, setVisibleCount] = useState(6);
 
     const [showExportModal, setShowExportModal] = useState(false);
-    const [reportType, setReportType] = useState("all");
-    const [minStudents, setMinStudents] = useState(25);
+    const [minimum, setMinimum] = useState(10);
+    const [exportType, setExportType] = useState("all");
+    const [selectedColumns, setSelectedColumns] = useState({
+        code: true,
+        name: true,
+        level: true,
+        count: true,
+        graduateCount: true,
+    });
 
-    const allColumns = [
-        "Course Code",
-        "Course Name",
-        "Students Count",
-        "Graduates Count",
-        "Minimum Students",
-        "Type",
-        "Credits",
-        "Level",
-        "Status"
-    ];
-    const [selectedColumns, setSelectedColumns] = useState([...allColumns]);
+    const levels = ["All", "Freshman", "Sophomore", "Junior", "Senior"];
 
     useEffect(() => {
-        const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
+        const preReg = JSON.parse(localStorage.getItem("preRegistrationInfo"));
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+        const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
+        const bylawCourses = JSON.parse(localStorage.getItem("bylawCourses")) || [];
 
-        // جلب المواد التي اختارها أي طالب فقط
-        const coursesGrouped = {};
-        studentSelections.forEach(s => {
-            if (!coursesGrouped[s.code]) coursesGrouped[s.code] = [];
-            coursesGrouped[s.code].push(s);
+        // لو التسجيل مقفل، نستخدم الـ snapshot
+        const snapshot = JSON.parse(localStorage.getItem("studentSelectionsSnapshot"));
+        const useSnapshot = !preReg || preReg.status !== "open";
+
+        const selectionsToUse = useSnapshot && snapshot ? snapshot.studentSelections : studentSelections;
+        const coursesToUse = useSnapshot && snapshot ? snapshot.courses : openedCourses;
+
+        const grouped = {};
+
+        selectionsToUse.forEach((selection) => {
+            if (!grouped[selection.code]) {
+                const opened = coursesToUse.find(c => c.code === selection.code && c.enabled);
+                const bylaw = bylawCourses.find(c => c.code === selection.code);
+
+                grouped[selection.code] = {
+                    code: selection.code,
+                    name: opened?.name || bylaw?.name || selection.name,
+                    level: opened?.level || bylaw?.level || selection.level,
+                    mandatory: bylaw?.mandatory ?? false,
+                    isOpened: !!opened,
+                    students: [],
+                };
+            }
+            grouped[selection.code].students.push(selection);
         });
 
-        const coursesWithStats = Object.keys(coursesGrouped).map(code => {
-            const students = coursesGrouped[code];
-            const openedCourse = openedCourses.find(c => c.code === code);
+        const result = Object.values(grouped).map((course) => ({
+            ...course,
+            count: course.students.length,
+            graduateCount: course.students.filter(s => s.isGraduate).length,
+        }));
 
-            return {
-                code,
-                name: openedCourse ? openedCourse.name : students[0].name,
-                credits: openedCourse ? openedCourse.credits : students[0].credits || 0,
-                level: openedCourse ? openedCourse.level : students[0].level || "Unknown",
-                mandatory: openedCourse ? openedCourse.mandatory : students[0].mandatory || false,
-                students,
-                count: students.length,
-                graduateCount: students.filter(s => s.isGraduate).length,
-                isOpened: openedCourse ? openedCourse.enabled : false, // false لو مقترحة
-            };
-        });
-
-        setCourseStats(coursesWithStats);
+        setCoursesData(result);
     }, []);
 
-    const handleGenerateCSV = () => {
-        const coursesToExport = courseStats.filter(c => {
-            if (reportType === "aboveMin") return c.count >= minStudents;
-            if (reportType === "aboveMinOrGraduates") return c.count >= minStudents || c.graduateCount > 0;
+    const filteredCourses = coursesData
+        .filter((c) => (activeLevel === "All" ? true : c.level === activeLevel))
+        .filter((c) => c.name.toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter((c) => {
+            if (typeFilter === "All") return true;
+            if (typeFilter === "Mandatory") return c.mandatory;
+            if (typeFilter === "Elective") return !c.mandatory;
             return true;
         });
 
-        if (coursesToExport.length === 0) {
-            alert("No courses meet the criteria!");
-            return;
+    const handleAdvancedExport = () => {
+        let coursesToExport = [...filteredCourses];
+
+        if (exportType === "minimum") {
+            coursesToExport = coursesToExport.filter(c => c.count >= minimum);
         }
 
-        let csvContent = selectedColumns.join(",") + "\n";
+        if (exportType === "graduates") {
+            coursesToExport = coursesToExport.filter(c => c.graduateCount > 0);
+        }
 
-        coursesToExport.forEach(c => {
-            const row = selectedColumns.map(col => {
-                switch (col) {
-                    case "Course Code": return c.code;
-                    case "Course Name": return c.name;
-                    case "Students Count": return c.count;
-                    case "Graduates Count": return c.graduateCount;
-                    case "Minimum Students": return minStudents;
-                    case "Type": return c.mandatory ? "Mandatory" : "Elective";
-                    case "Credits": return c.credits;
-                    case "Level": return c.level;
-                    case "Status": return c.isOpened ? "Opened" : "Proposed";
-                    default: return "";
-                }
-            }).join(",");
-            csvContent += row + "\n";
+        const headers = [];
+        if (selectedColumns.code) headers.push("Course Code");
+        if (selectedColumns.name) headers.push("Course Name");
+        if (selectedColumns.level) headers.push("Level");
+        if (selectedColumns.count) headers.push("Total Students");
+        if (selectedColumns.graduateCount) headers.push("Graduates");
+
+        let csvContent = headers.join(",") + "\n";
+
+        coursesToExport.forEach((c) => {
+            const row = [];
+            if (selectedColumns.code) row.push(c.code);
+            if (selectedColumns.name) row.push(c.name);
+            if (selectedColumns.level) row.push(c.level);
+            if (selectedColumns.count) row.push(c.count);
+            if (selectedColumns.graduateCount) row.push(c.graduateCount);
+
+            csvContent += row.join(",") + "\n";
         });
 
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = "student_selections_report.csv";
+        link.download = "Courses_Report.csv";
         link.click();
 
         setShowExportModal(false);
     };
 
-    const filteredCourses = courseStats.filter(c => {
-        if (filterStatus === "opened" && !c.isOpened) return false;
-        if (filterStatus === "proposed" && c.isOpened) return false;
-        if (searchTerm && !c.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-        return true;
-    });
-
     return (
-        <div className="student-report-container">
-            <h2>Student Selections Report</h2>
+        <div className="selections-container">
+            <h2>Student Course Selections</h2>
 
-            <div className="filters-container">
-                <div className="filters">
-                    <label>
-                        Search by Course Name:{" "}
-                        <input
-                            type="text"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Enter course name..."
-                        />
-                    </label>
-
-                    <label style={{ marginLeft: "20px" }}>
-                        Show:
-                        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                            <option value="all">All</option>
-                            <option value="opened">Opened</option>
-                            <option value="proposed">Proposed</option>
-                        </select>
-                    </label>
+            <div className="selectionheading">
+                <div className="level-tabs">
+                    {levels.map(level => (
+                        <button
+                            key={level}
+                            onClick={() => { setActiveLevel(level); setVisibleCount(6); }}
+                            className={activeLevel === level ? "active-tab" : ""}
+                        >
+                            {level}
+                        </button>
+                    ))}
                 </div>
 
-                <button className="export-btn" onClick={() => setShowExportModal(true)} style={{ marginLeft: "20px" }}>
-                    Export as CSV
-                </button>
+                <div className="filters-row">
+                    <input
+                        type="text"
+                        placeholder="Search by course name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+                        <option value="All">All Types</option>
+                        <option value="Mandatory">Mandatory</option>
+                        <option value="Elective">Elective</option>
+                    </select>
+                    {filteredCourses.length > 0 && (
+                        <button className="export-btn" onClick={() => setShowExportModal(true)}>Export</button>
+                    )}
+                </div>
             </div>
+
+            <div className="courses-grid">
+                {filteredCourses.length === 0 ? (
+                    <p>No courses with student selections yet.</p>
+                ) : (
+                    filteredCourses.slice(0, visibleCount).map(course => {
+                        const cardClass = `course-card ${course.isOpened ? "opened-card" : "proposed-card"}`;
+                        return (
+                            <Link key={course.code} to={`/course/${course.code}`} className="course-card-link">
+                                <div className={cardClass}>
+                                    <div className="card-header">
+                                        <h3>{course.name}</h3>
+                                        <span className="course-code">{course.code}</span>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="info-item">
+                                            <span className="label">Level</span>
+                                            <span>{course.level}</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="label">Type</span>
+                                            <span>{course.mandatory ? "Mandatory" : "Elective"}</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="label">Students</span>
+                                            <span>{course.count}</span>
+                                        </div>
+                                        <div className="info-item">
+                                            <span className="label">Graduates</span>
+                                            <span>{course.graduateCount}</span>
+                                        </div>
+                                    </div>
+                                    <div className="card-footer">
+                                        <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
+                                            {course.isOpened ? "Opened by Doctor" : "Proposed by Students"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })
+                )}
+            </div>
+
+            {visibleCount < filteredCourses.length && (
+                <div style={{ textAlign: "center", marginTop: "20px" }}>
+                    <button className="export-btn" onClick={() => setVisibleCount(prev => prev + 6)}>Show More</button>
+                </div>
+            )}
 
             {showExportModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h3>Export Options</h3>
-                        <div style={{ marginBottom: "10px" }}>
-                            <strong>Report Type:</strong>
-                            <label style={{ marginLeft: "10px" }}>
-                                <input type="radio" value="all" checked={reportType === "all"} onChange={() => setReportType("all")} /> All Courses
-                            </label>
-                            <label style={{ marginLeft: "10px" }}>
-                                <input type="radio" value="aboveMin" checked={reportType === "aboveMin"} onChange={() => setReportType("aboveMin")} /> Courses Above Minimum
-                            </label>
-                            <label style={{ marginLeft: "10px" }}>
-                                <input type="radio" value="aboveMinOrGraduates" checked={reportType === "aboveMinOrGraduates"} onChange={() => setReportType("aboveMinOrGraduates")} /> Above Minimum or Has Graduates
-                            </label>
+                    <div className="modal-box">
+                        <h3>Export Settings</h3>
+
+                        <div className="modal-section">
+                            <label>Export Type:</label>
+                            <select value={exportType} onChange={(e) => setExportType(e.target.value)}>
+                                <option value="all">All Courses</option>
+                                <option value="minimum">Courses Above Minimum</option>
+                                <option value="graduates">Courses With Graduates</option>
+                            </select>
                         </div>
 
-                        <div style={{ marginBottom: "10px" }}>
-                            Minimum Students: <input type="number" value={minStudents} onChange={(e) => setMinStudents(Number(e.target.value))} style={{ width: "60px" }} />
-                        </div>
-
-                        <div style={{ marginBottom: "10px" }}>
-                            <strong>Columns to Include:</strong>
-                            <div style={{ display: "flex", flexWrap: "wrap" }}>
-                                {allColumns.map(col => (
-                                    <label key={col} style={{ marginRight: "10px" }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedColumns.includes(col)}
-                                            onChange={() => {
-                                                setSelectedColumns(prev =>
-                                                    prev.includes(col) ? prev.filter(c => c !== col) : [...prev, col]
-                                                );
-                                            }}
-                                        /> {col}
-                                    </label>
-                                ))}
+                        {exportType === "minimum" && (
+                            <div className="modal-section">
+                                <label>Minimum Students:</label>
+                                <input type="number" value={minimum} onChange={(e) => setMinimum(Number(e.target.value))} />
                             </div>
+                        )}
+
+                        <div className="modal-section">
+                            <label>Columns:</label>
+                            {Object.keys(selectedColumns).map(key => (
+                                <div key={key}>
+                                    <input type="checkbox" checked={selectedColumns[key]} onChange={() =>
+                                        setSelectedColumns({ ...selectedColumns, [key]: !selectedColumns[key] })
+                                    } />
+                                    <span>{key}</span>
+                                </div>
+                            ))}
                         </div>
 
-                        <div style={{ marginTop: "15px", textAlign: "right" }}>
-                            <button onClick={() => setShowExportModal(false)} style={{ marginRight: "10px" }}>Cancel</button>
-                            <button onClick={handleGenerateCSV}>Generate CSV</button>
+                        <div className="modal-actions">
+                            <button className="export-btn" onClick={handleAdvancedExport}>Confirm Export</button>
+                            <button className="cancel-btn" onClick={() => setShowExportModal(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>
             )}
-
-            {filteredCourses.map(c => (
-                <div
-                    key={c.code}
-                    className="course-section"
-                    style={{ backgroundColor: c.isOpened ? "transparent" : "#f8f7ed", padding: "10px", borderRadius: "5px", marginBottom: "10px" }}
-                >
-                    <strong>{c.name} ({c.code})</strong> - Total Students: {c.count}, Graduates: {c.graduateCount} ({c.isOpened ? "Opened" : "Proposed"})
-
-                    {c.students.length === 0 ? (
-                        <p>No students registered yet.</p>
-                    ) : (
-                        <div className="course-table-container">
-                            <table className="course-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Student Name</th>
-                                        <th>Graduate</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {c.students.map((s, index) => (
-                                        <tr key={s.studentName}>
-                                            <td>{index + 1}</td>
-                                            <td>{s.studentName}</td>
-                                            <td>{s.isGraduate ? "Yes" : "No"}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-            ))}
         </div>
     );
 };

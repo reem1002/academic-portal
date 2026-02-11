@@ -5,6 +5,8 @@ import StudentSelectionsPage from "./pages/StudentSelectionsPage";
 import Dashboard from "./pages/Dashboard";
 import HODCoursesPage from "./pages/HODCoursesPage";
 import LoginPage from "./pages/LoginPage";
+import CourseDetailsPage from "./pages/CourseDetailsPage";
+
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
           <Route path="pre-registration" element={<PreRegistrationPage />} />
           <Route path="hod-courses" element={<HODCoursesPage />} />
           <Route path="student-selections" element={<StudentSelectionsPage />} />
+          <Route path="/course/:code" element={<CourseDetailsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

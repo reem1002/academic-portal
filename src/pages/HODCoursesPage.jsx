@@ -18,7 +18,7 @@ const HODCoursesPage = () => {
     const [countdown, setCountdown] = useState("");
 
     useEffect(() => {
-        // نجيب المواد المفتوحة فقط من الترم الحالي أو نبدأ من الصفر
+        // load current opened courses
         const savedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
         setCourses(savedCourses.length > 0 ? savedCourses : bylawCourses.map(c => ({ ...c, enabled: false, capacity: 50 })));
 
@@ -52,20 +52,25 @@ const HODCoursesPage = () => {
     }, [registrationInfo]);
 
     const handleRegistrationEnd = () => {
+        // عند الغلق: نعمل snapshot للـ report
+        const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+        const snapshot = {
+            timestamp: new Date().toISOString(),
+            courses: courses,
+            studentSelections,
+        };
+        localStorage.setItem("studentSelectionsSnapshot", JSON.stringify(snapshot));
+
         setCourses(prev => prev.map(c => ({ ...c, enabled: false })));
         localStorage.removeItem("preRegistrationInfo");
-        localStorage.removeItem("openedCourses");
+        localStorage.setItem("openedCourses", JSON.stringify(courses)); // حافظ على آخر حالة كورسات
         setRegistrationInfo(null);
-        alert("Pre-registration has ended.");
+        alert("Pre-registration has ended. Snapshot saved!");
     };
-
-
 
     const toggleCourse = (code) => {
         setCourses(prev => prev.map(c => c.code === code ? { ...c, enabled: !c.enabled } : c));
     };
-
-
 
     const publishCourses = () => {
         const now = new Date();
@@ -152,7 +157,6 @@ const HODCoursesPage = () => {
                         <th>Level</th>
                         <th>Credits</th>
                         <th>Type</th>
-
                     </tr>
                 </thead>
                 <tbody>
@@ -170,7 +174,6 @@ const HODCoursesPage = () => {
                             <td>{course.level}</td>
                             <td>{course.credits}</td>
                             <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
-
                         </tr>
                     ))}
                 </tbody>

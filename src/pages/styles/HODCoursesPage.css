@@ -59,19 +59,33 @@
 .hod-publish-btn {
   margin-top: 20px;
   padding: 12px 20px;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
-  background-color:#3872f0;
+  background: #1e293b;
   border: none;
   border-radius: 10px;
   color: #fff;
 }
 
 .hod-publish-btn:hover{
+  background: #334155;
     transform: scale(1.05);
     transition: all ease-in-out;
 }
 
+/* .export-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #1e293b;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.export-btn:hover {
+    background: #334155;
+} */
 
 .close-now-btn{
     margin-left: 40px;

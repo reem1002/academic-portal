@@ -22,11 +22,12 @@ const PreRegistrationPage = () => {
         setOpenedCourses(opened);
 
         const preRegInfo = JSON.parse(localStorage.getItem("preRegistrationInfo"));
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+
         if (preRegInfo && preRegInfo.status === "open") {
             setRegistrationEnd(new Date(preRegInfo.endDate));
 
             // جلب اختيارات الطالب لو التسجيل مفتوح فقط
-            const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
             const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
             const userSelections = allSelections.filter(s => s.studentName === currentUser.name);
             setSelectedCourses(userSelections);
@@ -34,11 +35,9 @@ const PreRegistrationPage = () => {
                 setIsGraduating(userSelections[0].isGraduate || false);
             }
         } else {
-            // لو التسجيل مقفول، ما نجيبش اختيارات الطالب للعرض
             setSelectedCourses([]);
         }
     }, []);
-
 
     // كاونت داون للتسجيل
     useEffect(() => {
@@ -69,62 +68,60 @@ const PreRegistrationPage = () => {
     const handleRegistrationEnd = () => {
         setRegistrationEnd(null);
         setCountdown("");
-        // مسح اختيارات الطالب عند انتهاء التسجيل
+
         const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
         const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
         const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
+
         localStorage.setItem("studentSelections", JSON.stringify(updatedSelections));
         setSelectedCourses([]);
         alert("Pre-registration has ended.");
     };
 
     const addCourse = (course) => {
-        if (!course || !canModify()) return;
-        const totalCredits = selectedCourses.reduce((sum, c) => sum + c.credits, 0);
-        if (totalCredits + course.credits > maxCredits) {
-            return alert("You exceeded the maximum allowed credits");
-        }
-        if (!selectedCourses.some(c => c.code === course.code)) {
-            const newSelection = [...selectedCourses, course];
-            setSelectedCourses(newSelection);
-            saveToLocalStorage(newSelection);
-        }
+        if (!canModify() || !course) return;
+
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+
+        // منع التكرار بناءً على studentName + code
+        const exists = selectedCourses.some(c => c.code === course.code && c.studentName === currentUser.name);
+        if (exists) return;
+
+        const newSelection = { studentName: currentUser.name, isGraduate: isGraduating, ...course };
+
+        setSelectedCourses(prev => [...prev, newSelection]);
+        localStorage.setItem("studentSelections", JSON.stringify([...allSelections, newSelection]));
     };
 
     const removeCourse = (code) => {
         if (!canModify()) return;
-        const newSelection = selectedCourses.filter(c => c.code !== code);
-        setSelectedCourses(newSelection);
-        saveToLocalStorage(newSelection);
+
+        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
+        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+
+        const updatedSelections = allSelections.filter(
+            s => !(s.studentName === currentUser.name && s.code === code)
+        );
+
+        const updatedSelectedCourses = selectedCourses.filter(
+            c => !(c.studentName === currentUser.name && c.code === code)
+        );
+
+        setSelectedCourses(updatedSelectedCourses);
+        localStorage.setItem("studentSelections", JSON.stringify(updatedSelections));
     };
 
     const submitSelection = () => {
         const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
         const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
-        const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
 
-        const newSelections = selectedCourses.map(c => ({
-            studentName: currentUser.name,
-            isGraduate: isGraduating,
-            ...c
-        }));
+        // إزالة اختيارات الطالب السابقة
+        const filteredSelections = allSelections.filter(s => s.studentName !== currentUser.name);
 
-        localStorage.setItem("studentSelections", JSON.stringify([...updatedSelections, ...newSelections]));
+        // إضافة الاختيارات الجديدة
+        localStorage.setItem("studentSelections", JSON.stringify([...filteredSelections, ...selectedCourses]));
         alert("Your pre-registration has been saved!");
-    };
-
-    const saveToLocalStorage = (courses) => {
-        const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
-        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
-        const updatedSelections = allSelections.filter(s => s.studentName !== currentUser.name);
-
-        const newSelections = courses.map(c => ({
-            studentName: currentUser.name,
-            isGraduate: isGraduating,
-            ...c
-        }));
-
-        localStorage.setItem("studentSelections", JSON.stringify([...updatedSelections, ...newSelections]));
     };
 
     // المواد المفتوحة
@@ -287,7 +284,6 @@ const PreRegistrationPage = () => {
                     ))}
                 </div>
             )}
-
 
             <button className="pr-submit-btn" onClick={submitSelection} disabled={selectedCourses.length === 0}>
                 Save Pre-Registration

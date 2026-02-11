@@ -1,0 +1,167 @@
+.details-container {
+    padding: 40px;
+    max-width: 1100px;
+    margin: auto;
+}
+
+/* ===== Header ===== */
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.details-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+.course-code {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* ===== Export Button ===== */
+.export-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: none;
+    background: #1e293b;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.export-btn:hover {
+    background: #334155;
+}
+
+/* ===== Stats ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-card span {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+.stat-card h3 {
+    margin: 5px 0 0;
+    font-size: 22px;
+}
+
+/* ===== Table ===== */
+.table-wrapper {
+    background: white;
+    /* border-radius: 14px; */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.students-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.students-table thead {
+    background: #f3f4f6;
+}
+
+.students-table th,
+.students-table td {
+     border: 1px solid #ccc;
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.students-table th {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.students-table tbody tr {
+    border-top: 1px solid #f1f1f1;
+    transition: 0.2s;
+}
+
+.students-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* ===== Status Badge ===== */
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-badge.graduate {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.regular {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+/* ===== Student Filters ===== */
+.student-filters {
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.student-filters input[type="text"] {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.student-filters select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+}
+
+.student-filters input:focus,
+.student-filters select:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 3px #4caf50;
+}
+
+.modal-section select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  margin-top: 5px;
+}
