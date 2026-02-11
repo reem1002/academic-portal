@@ -1,5 +1,7 @@
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { FiLogOut } from "react-icons/fi"; // أيقونة اللوجأوت
+import "./styles/PortalLayout.css"; // فايل الـ CSS
 
 const PortalLayout = () => {
     const navigate = useNavigate();
@@ -8,15 +10,14 @@ const PortalLayout = () => {
     useEffect(() => {
         const currentUser = JSON.parse(localStorage.getItem("currentUser"));
         if (!currentUser) {
-            navigate("/login"); // لو مش مسجل الدخول يرجع لل login
+            navigate("/login");
         } else {
             setUser(currentUser);
         }
     }, [navigate]);
 
-    if (!user) return <p>Loading...</p>; // loading قبل ما user يحدد
+    if (!user) return <p>Loading...</p>;
 
-    // Sidebar menu حسب الدور
     const menuItems =
         user.role === "student"
             ? [
@@ -29,65 +30,46 @@ const PortalLayout = () => {
             ];
 
     return (
-        <div style={{ display: "flex", height: "100vh" }}>
+        <div className="portal-container">
             {/* Sidebar */}
-            <div
-                style={{
-                    width: "250px",
-                    background: "#1f2937",
-                    color: "#fff",
-                    padding: "20px",
-                }}
-            >
-                <h3>Academic Portal</h3>
+            <div className="sidebar">
+                <div className="sidebar-top">
+                    <img
+                        src="/images/department-logo.png" // ضع هنا مسار اللوجو
+                        alt="Department Logo"
+                        className="sidebar-logo"
+                    />
+                    <h3>Academic Portal</h3>
+                    <ul className="sidebar-menu">
+                        {menuItems.map((item) => (
+                            <li key={item.name}>
+                                <Link to={item.path} className="sidebar-link">
+                                    {item.name}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-                <ul style={{ listStyle: "none", padding: 0 }}>
-                    {menuItems.map((item) => (
-                        <li key={item.name} style={{ marginBottom: "15px" }}>
-                            <Link to={item.path} style={linkStyle}>
-                                {item.name}
-                            </Link>
-                        </li>
-                    ))}
-                    <li>
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem("currentUser");
-                                navigate("/login");
-                            }}
-                            style={{
-                                background: "transparent",
-                                color: "#fff",
-                                border: "none",
-                                cursor: "pointer",
-                                marginTop: "20px",
-                            }}
-                        >
-                            Logout
-                        </button>
-                    </li>
-                </ul>
+                {/* Logout */}
+                <button
+                    className="logout-btn"
+                    onClick={() => {
+                        localStorage.removeItem("currentUser");
+                        navigate("/login");
+                    }}
+                >
+                    <FiLogOut size={20} />
+                    Logout
+                </button>
             </div>
 
             {/* Main Content */}
-            <div
-                style={{
-                    flex: 1,
-                    padding: "30px",
-                    background: "#f9fafb",
-                    overflowY: "auto",
-                }}
-            >
+            <div className="main-content">
                 <Outlet />
             </div>
         </div>
     );
-};
-
-const linkStyle = {
-    color: "#fff",
-    textDecoration: "none",
-    fontSize: "16px",
 };
 
 export default PortalLayout;
