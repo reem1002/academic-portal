@@ -28,7 +28,6 @@ const StudentSelectionsPage = () => {
         const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
         const bylawCourses = JSON.parse(localStorage.getItem("bylawCourses")) || [];
 
-        // لو التسجيل مقفل، نستخدم الـ snapshot
         const snapshot = JSON.parse(localStorage.getItem("studentSelectionsSnapshot"));
         const useSnapshot = !preReg || preReg.status !== "open";
 
@@ -48,6 +47,7 @@ const StudentSelectionsPage = () => {
                     level: opened?.level || bylaw?.level || selection.level,
                     mandatory: bylaw?.mandatory ?? false,
                     isOpened: !!opened,
+                    isLocked: opened?.isLocked || false, // ✅ حالة القفل
                     students: [],
                 };
             }
@@ -73,6 +73,28 @@ const StudentSelectionsPage = () => {
             return true;
         });
 
+    // 🔒 دالة لقفل/فتح المادة وحذف الطلاب لو اتقفلت
+    const handleLockCourse = (code) => {
+        const updatedCourses = coursesData.map(c => {
+            if (c.code === code) {
+                return { ...c, isLocked: !c.isLocked };
+            }
+            return c;
+        });
+
+        setCoursesData(updatedCourses);
+
+        // حذف الطلاب المسجلين في المادة لو اتقفلت
+        const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+        const updatedSelections = allSelections.filter(s => {
+            const course = updatedCourses.find(c => c.code === s.code);
+            return !(s.code === code && course.isLocked);
+        });
+
+        localStorage.setItem("studentSelections", JSON.stringify(updatedSelections));
+    };
+
+    // 🔄 دالة export
     const handleAdvancedExport = () => {
         let coursesToExport = [...filteredCourses];
 
@@ -117,6 +139,7 @@ const StudentSelectionsPage = () => {
         <div className="selections-container">
             <h2>Student Course Selections</h2>
 
+            {/* ===== Filters ===== */}
             <div className="selectionheading">
                 <div className="level-tabs">
                     {levels.map(level => (
@@ -148,6 +171,7 @@ const StudentSelectionsPage = () => {
                 </div>
             </div>
 
+            {/* ===== Courses Grid ===== */}
             <div className="courses-grid">
                 {filteredCourses.length === 0 ? (
                     <p>No courses with student selections yet.</p>
@@ -155,48 +179,62 @@ const StudentSelectionsPage = () => {
                     filteredCourses.slice(0, visibleCount).map(course => {
                         const cardClass = `course-card ${course.isOpened ? "opened-card" : "proposed-card"}`;
                         return (
-                            <Link key={course.code} to={`/course/${course.code}`} className="course-card-link">
-                                <div className={cardClass}>
-                                    <div className="card-header">
-                                        <h3>{course.name}</h3>
-                                        <span className="course-code">{course.code}</span>
+                            <div key={course.code} className="course-card-wrapper">
+                                <Link to={`/course/${course.code}`} className="course-card-link">
+                                    <div className={cardClass}>
+                                        <div className="card-header">
+                                            <h3>{course.name}</h3>
+                                            <span className="course-code">{course.code}</span>
+                                        </div>
+                                        <div className="card-body">
+                                            <div className="info-item">
+                                                <span className="label">Level</span>
+                                                <span>{course.level}</span>
+                                            </div>
+                                            <div className="info-item">
+                                                <span className="label">Type</span>
+                                                <span>{course.mandatory ? "Mandatory" : "Elective"}</span>
+                                            </div>
+                                            <div className="info-item">
+                                                <span className="label">Students</span>
+                                                <span>{course.count}</span>
+                                            </div>
+                                            <div className="info-item">
+                                                <span className="label">Graduates</span>
+                                                <span>{course.graduateCount}</span>
+                                            </div>
+                                        </div>
+                                        <div className="card-footer">
+                                            <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
+                                                {course.isOpened ? "Opened by Doctor" : "Proposed by Students"}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="card-body">
-                                        <div className="info-item">
-                                            <span className="label">Level</span>
-                                            <span>{course.level}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Type</span>
-                                            <span>{course.mandatory ? "Mandatory" : "Elective"}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Students</span>
-                                            <span>{course.count}</span>
-                                        </div>
-                                        <div className="info-item">
-                                            <span className="label">Graduates</span>
-                                            <span>{course.graduateCount}</span>
-                                        </div>
-                                    </div>
-                                    <div className="card-footer">
-                                        <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
-                                            {course.isOpened ? "Opened by Doctor" : "Proposed by Students"}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Link>
+                                </Link>
+
+
+                                {/* {course.isOpened && (
+                                    <button
+                                        className="lock-btn"
+                                        onClick={() => handleLockCourse(course.code)}
+                                    >
+                                        {course.isLocked ? "Unlock Course" : "Lock Course"}
+                                    </button>
+                                )} */}
+                            </div>
                         );
                     })
                 )}
             </div>
 
+            {/* ===== Show More ===== */}
             {visibleCount < filteredCourses.length && (
                 <div style={{ textAlign: "center", marginTop: "20px" }}>
                     <button className="export-btn" onClick={() => setVisibleCount(prev => prev + 6)}>Show More</button>
                 </div>
             )}
 
+            {/* ===== Export Modal ===== */}
             {showExportModal && (
                 <div className="modal-overlay">
                     <div className="modal-box">

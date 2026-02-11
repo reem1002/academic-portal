@@ -27,7 +27,6 @@ const PreRegistrationPage = () => {
         if (preRegInfo && preRegInfo.status === "open") {
             setRegistrationEnd(new Date(preRegInfo.endDate));
 
-            // جلب اختيارات الطالب لو التسجيل مفتوح فقط
             const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
             const userSelections = allSelections.filter(s => s.studentName === currentUser.name);
             setSelectedCourses(userSelections);
@@ -81,10 +80,16 @@ const PreRegistrationPage = () => {
     const addCourse = (course) => {
         if (!canModify() || !course) return;
 
+        // منع اضافة المادة لو مقفولة
+        const openedCourse = openedCourses.find(c => c.code === course.code);
+        if (openedCourse && openedCourse.isLocked) {
+            alert("This course is currently locked by the department.");
+            return;
+        }
+
         const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
         const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
 
-        // منع التكرار بناءً على studentName + code
         const exists = selectedCourses.some(c => c.code === course.code && c.studentName === currentUser.name);
         if (exists) return;
 
@@ -116,15 +121,13 @@ const PreRegistrationPage = () => {
         const currentUser = JSON.parse(localStorage.getItem("currentUser")) || {};
         const allSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
 
-        // إزالة اختيارات الطالب السابقة
         const filteredSelections = allSelections.filter(s => s.studentName !== currentUser.name);
 
-        // إضافة الاختيارات الجديدة
         localStorage.setItem("studentSelections", JSON.stringify([...filteredSelections, ...selectedCourses]));
         alert("Your pre-registration has been saved!");
     };
 
-    // المواد المفتوحة
+    // المواد المفتوحة بعد فلترة المستوى والنوع
     const filteredOpenedCourses = openedCourses
         .filter(course => course.level === activeLevel)
         .filter(course => course.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -212,28 +215,35 @@ const PreRegistrationPage = () => {
                         <th>Course Name</th>
                         <th>Credits</th>
                         <th>Type</th>
+                        <th>Status</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {filteredOpenedCourses.map(course => {
                         const selected = selectedCourses.some(c => c.code === course.code);
-                        const isOpened = openedCourses.some(o => o.code === course.code && o.enabled);
+                        const isLocked = course.isLocked || false;
 
                         return (
                             <tr key={course.code}
                                 style={{
-                                    backgroundColor: isOpened ? "#d1f0d1" : "",
-                                    fontWeight: isOpened ? "bold" : "normal"
+                                    backgroundColor: course.isLocked
+                                        ? "#f8d7da"
+                                        : course.enabled
+                                            ? "#d1f0d1"
+                                            : "white",
+                                    fontWeight: course.isLocked || course.enabled ? "bold" : "normal"
                                 }}>
                                 <td>{course.code}</td>
                                 <td>{course.name}</td>
                                 <td>{course.credits}</td>
                                 <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
+                                <td>{course.isLocked ? "Locked" : course.enabled ? "Open" : "Proposed"}</td>
                                 <td>
                                     <button
                                         className="pr-action-btn"
                                         onClick={() => selected ? removeCourse(course.code) : addCourse(course)}
+                                        disabled={course.isLocked}
                                     >
                                         {selected ? <FiTrash2 size={16} /> : <FiPlus size={18} />}
                                     </button>

@@ -18,9 +18,13 @@ const HODCoursesPage = () => {
     const [countdown, setCountdown] = useState("");
 
     useEffect(() => {
-        // load current opened courses
+        // load current opened courses or bylawCourses if empty
         const savedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
-        setCourses(savedCourses.length > 0 ? savedCourses : bylawCourses.map(c => ({ ...c, enabled: false, capacity: 50 })));
+        setCourses(
+            savedCourses.length > 0
+                ? savedCourses
+                : bylawCourses.map(c => ({ ...c, enabled: false, isLocked: false, capacity: 50 }))
+        );
 
         const preReg = JSON.parse(localStorage.getItem("preRegistrationInfo"));
         if (preReg && preReg.status === "open") setRegistrationInfo(preReg);
@@ -52,7 +56,7 @@ const HODCoursesPage = () => {
     }, [registrationInfo]);
 
     const handleRegistrationEnd = () => {
-        // عند الغلق: نعمل snapshot للـ report
+        // snapshot قبل الإغلاق
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
         const snapshot = {
             timestamp: new Date().toISOString(),
@@ -61,15 +65,48 @@ const HODCoursesPage = () => {
         };
         localStorage.setItem("studentSelectionsSnapshot", JSON.stringify(snapshot));
 
+        // اغلاق كل الكورسات
         setCourses(prev => prev.map(c => ({ ...c, enabled: false })));
         localStorage.removeItem("preRegistrationInfo");
-        localStorage.setItem("openedCourses", JSON.stringify(courses)); // حافظ على آخر حالة كورسات
+        localStorage.setItem("openedCourses", JSON.stringify(courses));
         setRegistrationInfo(null);
         alert("Pre-registration has ended. Snapshot saved!");
     };
 
-    const toggleCourse = (code) => {
-        setCourses(prev => prev.map(c => c.code === code ? { ...c, enabled: !c.enabled } : c));
+    const toggleCourseEnabled = (code) => {
+        setCourses(prev =>
+            prev.map(c => {
+                if (c.code === code) {
+                    if (c.isLocked) return c; // مش ممكن تفتح مادة مقفولة
+                    return { ...c, enabled: !c.enabled };
+                }
+                return c;
+            })
+        );
+    };
+
+    const toggleCourseLocked = (code) => {
+        setCourses(prev =>
+            prev.map(c => {
+                if (c.code === code) {
+                    const newLockState = !c.isLocked;
+
+                    // لو حوّلناها لـ Locked، لازم تبقى مش Open
+                    let updatedCourse = { ...c, isLocked: newLockState };
+                    if (newLockState) updatedCourse.enabled = false;
+
+                    // لو المادة اتقفلت، نحذف أي تسجيلات الطلاب على المادة
+                    if (newLockState) {
+                        const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+                        const updatedSelections = studentSelections.filter(s => s.code !== code);
+                        localStorage.setItem("studentSelections", JSON.stringify(updatedSelections));
+                    }
+
+                    return updatedCourse;
+                }
+                return c;
+            })
+        );
     };
 
     const publishCourses = () => {
@@ -152,6 +189,7 @@ const HODCoursesPage = () => {
                 <thead>
                     <tr>
                         <th>Open</th>
+                        <th>Locked</th>
                         <th>Code</th>
                         <th>Course Name</th>
                         <th>Level</th>
@@ -160,22 +198,37 @@ const HODCoursesPage = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {filteredCourses.map(course => (
-                        <tr key={course.code} className={course.enabled ? "hod-row-active" : ""}>
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    checked={course.enabled}
-                                    onChange={() => toggleCourse(course.code)}
-                                />
-                            </td>
-                            <td>{course.code}</td>
-                            <td>{course.name}</td>
-                            <td>{course.level}</td>
-                            <td>{course.credits}</td>
-                            <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
-                        </tr>
-                    ))}
+                    {filteredCourses.map(course => {
+                        let rowColor = "";
+                        if (course.isLocked) rowColor = "#f8d7da"; // أحمر لو Locked
+                        else if (course.enabled) rowColor = "#d1f0d1"; // أخضر لو Open
+                        // غيره يبقى proposed → بدون لون
+
+                        return (
+                            <tr key={course.code} style={{ backgroundColor: rowColor }}>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={course.enabled}
+                                        onChange={() => toggleCourseEnabled(course.code)}
+                                        disabled={course.isLocked}
+                                    />
+                                </td>
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={course.isLocked || false}
+                                        onChange={() => toggleCourseLocked(course.code)}
+                                    />
+                                </td>
+                                <td>{course.code}</td>
+                                <td>{course.name}</td>
+                                <td>{course.level}</td>
+                                <td>{course.credits}</td>
+                                <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
+                            </tr>
+                        )
+                    })}
                 </tbody>
             </table>
 
