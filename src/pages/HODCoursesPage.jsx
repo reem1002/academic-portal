@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./styles/HODCoursesPage.css";
 import bylawCourses from "../data/bylawCourses";
+import { generateSemesterId } from "../utils/semesterUtils";
 
 const HODCoursesPage = () => {
     const navigate = useNavigate();
@@ -16,6 +17,50 @@ const HODCoursesPage = () => {
     const [statusFilter, setStatusFilter] = useState("All");
 
     const [countdown, setCountdown] = useState("");
+
+    const startNewSemester = () => {
+        const confirmStart = window.confirm(
+            "Start a new semester? Previous data will be archived."
+        );
+        if (!confirmStart) return;
+
+        const currentSemester = localStorage.getItem("currentSemester");
+        const studentSelections =
+            JSON.parse(localStorage.getItem("studentSelections")) || [];
+
+        if (currentSemester) {
+            const history =
+                JSON.parse(localStorage.getItem("semesterHistory")) || [];
+
+            history.push({
+                semesterId: currentSemester,
+                endedAt: new Date().toISOString(),
+                courses,
+                studentSelections
+            });
+
+            localStorage.setItem("semesterHistory", JSON.stringify(history));
+        }
+
+        const newSemesterId = generateSemesterId();
+        localStorage.setItem("currentSemester", newSemesterId);
+
+        localStorage.removeItem("studentSelections");
+        localStorage.removeItem("preRegistrationInfo");
+
+        const resetCourses = courses.map(c => ({
+            ...c,
+            enabled: false,
+            isLocked: false
+        }));
+
+        setCourses(resetCourses);
+        localStorage.setItem("openedCourses", JSON.stringify(resetCourses));
+        setRegistrationInfo(null);
+
+        alert(`New Semester Started: ${newSemesterId}`);
+    };
+
 
     useEffect(() => {
         // load current opened courses or bylawCourses if empty
@@ -58,11 +103,24 @@ const HODCoursesPage = () => {
     const handleRegistrationEnd = () => {
         // snapshot قبل الإغلاق
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
+
+
+        // احفظ بيانات كل مادة مع الطلاب اللي مسجلين فيها وعدد الخريجين
+        const snapshotCourses = courses.map(course => {
+            const studentsInCourse = studentSelections.filter(s => s.code === course.code);
+            return {
+                ...course,
+                students: studentsInCourse, // كل الطلاب المسجلين
+                graduates: studentsInCourse.filter(s => s.isGraduate).length, // عدد الخريجين
+            };
+        });
+
         const snapshot = {
             timestamp: new Date().toISOString(),
-            courses: courses,
+            courses: snapshotCourses,
             studentSelections,
         };
+
         localStorage.setItem("studentSelectionsSnapshot", JSON.stringify(snapshot));
 
         // اغلاق كل الكورسات
@@ -136,7 +194,22 @@ const HODCoursesPage = () => {
 
     return (
         <div className="hod-container">
-            <h2>Head of Department – Course Management</h2>
+            <div className="hod-header">
+                <div>
+                    <h2>Head of Department – Course Management</h2>
+                    <p className="semester-label">
+                        Current Semester: <strong>{localStorage.getItem("currentSemester")}</strong>
+                    </p>
+                </div>
+
+                <button
+                    className="new-semester-btn"
+                    onClick={startNewSemester}
+                >
+                    Start New Semester
+                </button>
+            </div>
+
 
             {registrationInfo && registrationInfo.status === "open" ? (
                 <div className="preReg-banner">
@@ -241,6 +314,9 @@ const HODCoursesPage = () => {
             >
                 View Student Selections
             </button>
+
+
+
         </div>
     );
 };

@@ -27,6 +27,7 @@ const PortalLayout = () => {
             : [
                 { name: "Dashboard", path: "/" },
                 { name: "Course Management", path: "/hod-courses" },
+                { name: "Semesters History", path: "/Semester-History" }
             ];
 
     return (
@@ -35,7 +36,7 @@ const PortalLayout = () => {
             <div className="sidebar">
                 <div className="sidebar-top">
                     <img
-                        src="/images/department-logo.png" 
+                        src="/images/department-logo.png"
                         alt="Department Logo"
                         className="sidebar-logo"
                     />

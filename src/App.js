@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import HODCoursesPage from "./pages/HODCoursesPage";
 import LoginPage from "./pages/LoginPage";
 import CourseDetailsPage from "./pages/CourseDetailsPage";
+import SemesterHistoryPage from "./pages/SemesterHistoryPage";
 
 
 function App() {
@@ -19,6 +20,8 @@ function App() {
           <Route path="hod-courses" element={<HODCoursesPage />} />
           <Route path="student-selections" element={<StudentSelectionsPage />} />
           <Route path="/course/:code" element={<CourseDetailsPage />} />
+          <Route path="/semester-history" element={<SemesterHistoryPage />} />
+
         </Route>
       </Routes>
     </BrowserRouter>

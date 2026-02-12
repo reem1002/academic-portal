@@ -8,6 +8,35 @@
   margin-bottom: 15px;
 }
 
+.hod-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.semester-label {
+    margin: 5px 0 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.new-semester-btn {
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.new-semester-btn:hover {
+    background-color: #a93226;
+    transform: translateY(-2px);
+}
+
 
 .hod-filters {
   display: flex;

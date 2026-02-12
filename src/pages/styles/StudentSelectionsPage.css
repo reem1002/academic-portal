@@ -5,12 +5,12 @@
     color: #333;
 }
 
-.student-report-container h2 {
+.student-report-container .student-report-container h2 {
     margin-bottom: 25px;
     color: #1f2937; 
 }
 
-.filters-container {
+.student-report-container .filters-container {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -19,14 +19,14 @@
 
 }
 
-.filters-container input[type="text"] {
+.student-report-container .filters-container input[type="text"] {
     padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 14px;
 }
 
-.filters-container .filters select {
+.student-report-container .filters-container .filters select {
     padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -51,7 +51,7 @@
     background-color: #1d4ed8; /* أزرق غامق عند hover */
 }
 
-.course-section {
+.student-report-container .course-section {
     margin-bottom: 30px;
     padding: 15px;
     border: 1px solid #e5e7eb;
@@ -59,14 +59,14 @@
     background-color: #fafafa;
 }
 
-.course-section strong {
+.student-report-container .course-section strong {
     font-size: 16px;
     display: block;
     margin-bottom: 10px;
     color: #111827;
 }
 
-.course-table-container {
+.student-report-container .course-table-container {
     max-height: 250px;
     overflow-y: auto;
     border: 1px solid #d1d5db;
@@ -74,7 +74,7 @@
     margin-top: 10px;
 }
 
-.course-table {
+.student-report-container .course-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
@@ -253,19 +253,19 @@
     color: inherit;
 }
 
-.course-card {
+.student-report-container .course-card {
     transition: 0.3s;
 }
 
-.opened-card {
+.student-report-container .opened-card {
     border-left: 6px solid #28a745;
 }
 
-.proposed-card {
+.student-report-container .proposed-card {
     border-left: 6px solid #ffc107;
 }
 
-.course-status {
+.student-report-container .course-status {
     display: inline-block;
     margin-top: 10px;
     font-weight: bold;

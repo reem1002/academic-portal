@@ -98,7 +98,15 @@ const PreRegistrationPage = () => {
         const exists = selectedCourses.some(c => c.code === course.code && c.studentName === currentUser.name);
         if (exists) return;
 
-        const newSelection = { studentName: currentUser.name, isGraduate: isGraduating, ...course };
+        const currentSemester = localStorage.getItem("currentSemester");
+
+        const newSelection = {
+            semesterId: currentSemester,
+            studentName: currentUser.name,
+            isGraduate: isGraduating,
+            ...course
+        };
+
 
         setSelectedCourses(prev => [...prev, newSelection]);
         localStorage.setItem("studentSelections", JSON.stringify([...allSelections, newSelection]));
@@ -166,7 +174,9 @@ const PreRegistrationPage = () => {
 
             {registrationEnd && (
                 <div className="pr-banner">
-                    Pre-registration is OPEN! Ends in: <strong>{countdown}</strong>
+                    {localStorage.getItem("currentSemester")} Pre-registration is OPEN!
+                    Ends in: <strong>{countdown}</strong>
+
                 </div>
             )}
 
