@@ -1,9 +1,11 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "./styles/CourseDetailsPage.css";
+import { FaArrowLeft } from "react-icons/fa";
 
 const CourseDetailsPage = () => {
     const { code } = useParams();
+    const navigate = useNavigate(); // <-- هنا
     const [course, setCourse] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
@@ -13,7 +15,6 @@ const CourseDetailsPage = () => {
         studentName: true,
         status: true,
     });
-
 
     useEffect(() => {
         const studentSelections =
@@ -45,7 +46,6 @@ const CourseDetailsPage = () => {
     if (!course)
         return <div className="details-container">No data found.</div>;
 
-    // فلترة الطلاب حسب السيرش والحالة
     const filteredStudents = course.students.filter(s => {
         const matchesName = s.studentName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus =
@@ -87,21 +87,22 @@ const CourseDetailsPage = () => {
 
         setShowExportModal(false);
     };
+
     return (
         <div className="details-container">
-            {/* ===== Header ===== */}
+            <button className="back-btn" onClick={() => navigate(-1)}>
+                <FaArrowLeft /> Back
+            </button>
             <div className="details-header">
+
                 <div>
                     <h2>{course.name}</h2>
                     <span className="course-code">{course.code}</span>
                 </div>
-
                 <button className="export-btn" onClick={() => setShowExportModal(true)}>
                     Export
                 </button>
             </div>
-
-
 
             {/* ===== Stats Cards ===== */}
             <div className="stats-grid">
@@ -114,6 +115,7 @@ const CourseDetailsPage = () => {
                     <h3>{course.graduateCount}</h3>
                 </div>
             </div>
+
             {/* ===== Filters ===== */}
             <div className="student-filters">
                 <input
@@ -128,6 +130,7 @@ const CourseDetailsPage = () => {
                     <option value="Regular">Regular</option>
                 </select>
             </div>
+
             {/* ===== Table ===== */}
             <div className="table-wrapper">
                 <table className="students-table">
