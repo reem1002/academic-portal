@@ -1,21 +1,80 @@
+/* Container العام */
 .history-container {
   padding: 30px;
-  font-family: Arial, sans-serif;
 }
 
+/* العنوان الرئيسي */
 .history-title {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
+/* بطاقة snapshot */
+.snapshot-card {
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-top: 20px;
+
+}
+
+/* هيدر بطاقة snapshot */
+.snapshot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* زر تصدير CSV */
+.export-btn2 {
+  padding: 10px 20px !important;
+  background-color: #1e293b;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.export-btn2:hover {
+  background-color: #334155;
+}
+
+/* Summary للـ snapshot */
+.snapshot-summary {
+  width: max-content;
+  background-color: #fef9c3;
+  border-left: 5px solid #ffc107;
+  padding: 10px 15px;
+  margin: 15px 0;
+  font-weight: 500;
+  font-size: 16px;
+  border-radius: 5px;
+  color: #92400e;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Summary للـ history */
+.snapshot-summary1 {
+  width: max-content;
+  background-color: #d1f0d1;
+  border-left: 5px solid #2e7d32;
+  color: #166534;
+  padding: 10px 15px;
+  font-weight: 500;
+  font-size: 16px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* جدول history و snapshot */
 .history-table-wrapper,
 .snapshot-table-wrapper {
   max-height: 400px;
   overflow-y: auto;
   margin-bottom: 50px;
-
 }
-
-
 
 .history-table,
 .snapshot-table {
@@ -27,7 +86,7 @@
 .history-table td,
 .snapshot-table th,
 .snapshot-table td {
-   border: 1px solid #ccc;
+  border: 1px solid #ccc;
   padding: 10px;
 }
 
@@ -36,6 +95,7 @@
   background: #f3f4f6;
 }
 
+/* أزرار view snapshot */
 .view-btn {
   padding: 6px 12px;
   border: none;
@@ -43,77 +103,43 @@
   color: #2e7d32;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: 5px;
 }
 
 .view-btn:hover {
   background-color: #dff7df;
 }
 
-.snapshot-card {
-  /* border: 1px solid #ccc; */
-  
-  padding: 15px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+/* الحالة opened / proposed */
+.status.opened {
+  color: #2e7d32;
+  font-weight: 600;
 }
 
-.snapshot-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+.status.proposed {
+  color: #b45309;
+  font-weight: 600;
 }
 
-
-
-.snapshot-summary {
-    width: max-content;
-    background-color: #fef9c3;  
-    border-left: 5px solid #ffc107; 
-    padding: 10px 15px;
-    margin: 15px 0;
-    font-weight: 500;
-    font-size: 16px;
-    border-radius: 5px;
-    color: #92400e;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-
-.snapshot-summary1{
- width: max-content;
-    background-color: #d1f0d1;  
-    border-left: 5px solid #2e7d32; 
-     color: #166534;
-    padding: 10px 15px;
-    font-weight: 500;
-    font-size: 16px;
-    border-radius: 5px;
-    /* color: #333; */
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);   
-}
-
-
+/* فلترة */
 .history-filters {
-    display: flex;
-    gap: 20px;
-
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
 }
 
 .history-filters label {
-    font-weight: 500;
-    color: #2c3e50;
+  font-weight: 500;
+  color: #2c3e50;
 }
 
 .history-filters select {
-    margin-left: 8px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+  margin-left: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
 }
 
 .history-filters label:focus,
@@ -123,27 +149,47 @@
   box-shadow: 0 0 3px #1890ff;
 }
 
-
-.historyheader{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Header للـ history + فلترة */
+.historyheader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.export-btn2 {
-    padding: 10px 20px !important;
-    background-color: #1e293b;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.2s;
-    align-self:flex-start !important; 
-    height: 100%;
-    margin: auto 0;
+/* زر الرجوع */
+.back-btn {
+  padding: 10px 15px;
+  background-color: #8dd1e1;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+font-weight: 750;
+  gap: 5px;
+  margin-bottom: 15px;
 }
 
-.export-btn2:hover {
-    background-color: #334155; 
+/* .back-btn:hover {
+  background-color: #1e293b;
+} */
+
+/* بطاقة الـ chart */
+.chart-card {
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f3f4f6;
+  margin-bottom: 40px;
+
+}
+
+/* Empty state */
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #555;
+  font-weight: 500;
+  font-size: 16px;
 }

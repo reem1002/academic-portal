@@ -1,6 +1,15 @@
 import { useState, useEffect } from "react";
-import { saveAs } from "file-saver"; // تحتاج تثبيت: npm install file-saver
+import { saveAs } from "file-saver";
+import { FaArrowLeft } from "react-icons/fa";
 import "./styles/SemesterHistoryPage.css";
+import {
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+} from "recharts";
 
 const SemesterHistoryPage = () => {
     const [history, setHistory] = useState([]);
@@ -13,8 +22,36 @@ const SemesterHistoryPage = () => {
         setHistory(stored.reverse());
     }, []);
 
-    // الفلترة حسب السنة أو السيمستر
-    const filteredHistory = history.filter(h => {
+    // أفضل 10 كورسات لكل السيمسترات
+    const getMostSelectedCourses = () => {
+        const allSelections = history.flatMap((sem) => sem.studentSelections || []);
+        const courseCount = {};
+        allSelections.forEach((sel) => {
+            courseCount[sel.code] = (courseCount[sel.code] || 0) + 1;
+        });
+        const sortedCourses = Object.entries(courseCount)
+            .sort((a, b) => b[1] - a[1])
+            .map(([code, count]) => ({ code, count }));
+        return sortedCourses.slice(0, 10);
+    };
+
+    // بيانات الجراف حسب السيمستر
+    const getChartData = () => {
+        if (semesterFilter === "All") {
+            return getMostSelectedCourses().map((c) => ({ name: c.code, count: c.count }));
+        } else {
+            const sem = history.find((h) => h.semesterId === semesterFilter);
+            if (!sem) return [];
+            const studentSelections = sem.studentSelections || [];
+            const courseCount = {};
+            studentSelections.forEach((sel) => {
+                courseCount[sel.code] = (courseCount[sel.code] || 0) + 1;
+            });
+            return Object.entries(courseCount).map(([code, count]) => ({ name: code, count }));
+        }
+    };
+
+    const filteredHistory = history.filter((h) => {
         const year = new Date(h.endedAt).getFullYear();
         const yearMatch = yearFilter === "All" || year === Number(yearFilter);
         const semMatch = semesterFilter === "All" || h.semesterId === semesterFilter;
@@ -23,33 +60,22 @@ const SemesterHistoryPage = () => {
 
     const handleExportCSV = () => {
         if (!selectedSemester) return;
-
         const studentSelections = selectedSemester.studentSelections || [];
-
         const selectedSemesterCourses = (selectedSemester.courses || [])
-            .map(course => {
-                const studentsInCourse = studentSelections.filter(s => s.code === course.code);
+            .map((course) => {
+                const studentsInCourse = studentSelections.filter(
+                    (s) => s.code === course.code
+                );
                 return {
                     ...course,
                     students: studentsInCourse,
-                    graduates: studentsInCourse.filter(s => s.isGraduate).length,
+                    graduates: studentsInCourse.filter((s) => s.isGraduate).length,
                 };
             })
-            .filter(course => course.students.length > 0);
-
-        if (selectedSemesterCourses.length === 0) return;
-
-        const header = [
-            "Code",
-            "Name",
-            "Level",
-            "Type",
-            "Students",
-            "Graduates",
-            "Status",
-        ];
-
-        const rows = selectedSemesterCourses.map(course => [
+            .filter((course) => course.students.length > 0);
+        if (!selectedSemesterCourses.length) return;
+        const header = ["Code", "Name", "Level", "Type", "Students", "Graduates", "Status"];
+        const rows = selectedSemesterCourses.map((course) => [
             course.code,
             course.name,
             course.level,
@@ -58,114 +84,40 @@ const SemesterHistoryPage = () => {
             course.graduates,
             course.enabled ? "Opened" : "Proposed",
         ]);
-
-        const csvContent = [header, ...rows].map(e => e.join(",")).join("\n");
+        const csvContent = [header, ...rows].map((e) => e.join(",")).join("\n");
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
         saveAs(blob, `${selectedSemester.semesterId}_snapshot.csv`);
     };
 
     const getDisplayedCourses = () => {
         if (!selectedSemester) return [];
-
         const studentSelections = selectedSemester.studentSelections || [];
-
         return (selectedSemester.courses || [])
-            .map(course => {
-                const studentsInCourse = studentSelections.filter(s => s.code === course.code);
+            .map((course) => {
+                const studentsInCourse = studentSelections.filter(
+                    (s) => s.code === course.code
+                );
                 return {
                     ...course,
                     students: studentsInCourse,
-                    graduates: studentsInCourse.filter(s => s.isGraduate).length,
+                    graduates: studentsInCourse.filter((s) => s.isGraduate).length,
                 };
             })
-            .filter(course => course.students.length > 0);
+            .filter((course) => course.students.length > 0);
     };
 
-    // استخراج السنوات المتاحة للفلترة
-    const years = [...new Set(history.map(h => new Date(h.endedAt).getFullYear()))].sort((a, b) => b - a);
+    const years = [...new Set(history.map((h) => new Date(h.endedAt).getFullYear()))].sort(
+        (a, b) => b - a
+    );
 
-    return (
-        <div className="history-container">
-            <h2 className="history-title">Semester History</h2>
+    // ===== Snapshot page =====
+    if (selectedSemester) {
+        return (
+            <div className="history-container">
+                <button className="back-btn" onClick={() => setSelectedSemester(null)}>
+                    <FaArrowLeft /> Back
+                </button>
 
-
-            <div className="historyheader">
-                <div className="history-summary-card ">
-                    {history.length === 0 ? (
-                        <p>No archived semesters yet.</p>
-                    ) : (
-                        <p className="snapshot-summary1">
-                            You have {history.length} archived semester{history.length > 1 ? "s" : ""}.
-                        </p>
-                    )}
-                </div>
-
-                {/* فلترة ديناميكية */}
-                {history.length > 0 && (
-                    <div className="history-filters">
-                        <label>
-                            Filter by Year:
-                            <select
-                                value={yearFilter}
-                                onChange={(e) => setYearFilter(e.target.value)}
-                            >
-                                <option value="All">All</option>
-                                {years.map(year => (
-                                    <option key={year} value={year}>{year}</option>
-                                ))}
-                            </select>
-                        </label>
-
-                        <label>
-                            Filter by Semester:
-                            <select
-                                value={semesterFilter}
-                                onChange={(e) => setSemesterFilter(e.target.value)}
-                            >
-                                <option value="All">All</option>
-                                {history.map(h => (
-                                    <option key={h.semesterId} value={h.semesterId}>{h.semesterId}</option>
-                                ))}
-                            </select>
-                        </label>
-                    </div>
-                )}
-            </div>
-            {/* جدول السيمسترات */}
-            {filteredHistory.length === 0 ? (
-                <div className="empty-state">No semesters match the selected filter.</div>
-            ) : (
-                <div className="history-table-wrapper">
-                    <table className="history-table">
-                        <thead>
-                            <tr>
-                                <th>Semester</th>
-                                <th>Ended At</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredHistory.map((sem, index) => (
-                                <tr key={index}>
-                                    <td className="semester-id">{sem.semesterId}</td>
-                                    <td>{new Date(sem.endedAt).toLocaleString()}</td>
-                                    <td>
-                                        <button
-                                            className="view-btn"
-                                            onClick={() => setSelectedSemester(sem)}
-                                        >
-                                            View Snapshot
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {/* بطاقة snapshot للكورسات */}
-            {selectedSemester && (
                 <div className="snapshot-card">
                     <div className="snapshot-header">
                         <h3>{selectedSemester.semesterId} Snapshot</h3>
@@ -177,7 +129,8 @@ const SemesterHistoryPage = () => {
                     <p className="snapshot-summary">
                         {getDisplayedCourses().length === 0
                             ? "No courses were taken by students this semester."
-                            : `In this semester, ${getDisplayedCourses().length} course${getDisplayedCourses().length > 1 ? "s" : ""} were taken by students.`}
+                            : `In this semester, ${getDisplayedCourses().length} course${getDisplayedCourses().length > 1 ? "s" : ""
+                            } were taken by students.`}
                     </p>
 
                     <div className="snapshot-table-wrapper">
@@ -212,6 +165,132 @@ const SemesterHistoryPage = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    // ===== Main history page =====
+    return (
+        <div className="history-container">
+            <h2 className="history-title">Semester History</h2>
+
+            <div className="historyheader">
+                <div className="history-summary-card">
+                    {history.length === 0 ? (
+                        <p>No archived semesters yet.</p>
+                    ) : (
+                        <p className="snapshot-summary1">
+                            You have {history.length} archived semester
+                            {history.length > 1 ? "s" : ""}.
+                        </p>
+                    )}
+                </div>
+
+                {history.length > 0 && (
+                    <div className="history-filters">
+                        <label>
+                            Filter by Year:
+                            <select
+                                value={yearFilter}
+                                onChange={(e) => setYearFilter(e.target.value)}
+                            >
+                                <option value="All">All</option>
+                                {years.map((year) => (
+                                    <option key={year} value={year}>
+                                        {year}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Filter by Semester:
+                            <select
+                                value={semesterFilter}
+                                onChange={(e) => setSemesterFilter(e.target.value)}
+                            >
+                                <option value="All">All</option>
+                                {history.map((h) => (
+                                    <option key={h.semesterId} value={h.semesterId}>
+                                        {h.semesterId}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                )}
+            </div>
+            {/* Chart */}
+            {getChartData().length > 0 && (
+                <div className="chart-card">
+                    <h4>Most Selected Courses</h4>
+                    <ResponsiveContainer width="100%" height={350}>
+                        <BarChart
+                            data={getChartData()}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+                        >
+                            <XAxis
+                                dataKey="name"
+                                interval={0}
+                                angle={0}
+                                textAnchor="end"
+                            />
+                            <YAxis />
+                            <Tooltip
+                                content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                        const p = payload[0];
+                                        return (
+                                            <div style={{
+                                                backgroundColor: '#fff',
+                                                padding: '10px',
+                                                border: '1px solid #ccc',
+                                            }}>
+                                                <strong>Course:</strong> {p.payload.name}<br />
+                                                <strong>Students:</strong> {p.payload.count}
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
+                            />
+                            <Bar dataKey="count" fill="#82ca9d" barSize={50} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+
+
+            {filteredHistory.length === 0 ? (
+                <div className="empty-state">No semesters match the selected filter.</div>
+            ) : (
+                <div className="history-table-wrapper">
+                    <table className="history-table">
+                        <thead>
+                            <tr>
+                                <th>Semester</th>
+                                <th>Ended At</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredHistory.map((sem, index) => (
+                                <tr key={index}>
+                                    <td className="semester-id">{sem.semesterId}</td>
+                                    <td>{new Date(sem.endedAt).toLocaleString()}</td>
+                                    <td>
+                                        <button
+                                            className="view-btn"
+                                            onClick={() => setSelectedSemester(sem)}
+                                        >
+                                            View Snapshot
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
         </div>
