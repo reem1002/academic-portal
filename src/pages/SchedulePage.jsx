@@ -133,7 +133,7 @@ const SchedulePage = () => {
 
     return (
         <div className="schedule-container">
-            <h2>Smart Schedule Builder</h2>
+            <h2>Schedule Builder</h2>
 
             <div className="controls">
                 <label>
