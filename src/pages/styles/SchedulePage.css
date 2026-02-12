@@ -1,0 +1,74 @@
+.schedule-container {
+  padding: 30px;
+
+}
+
+.controls {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.schedule-grid {
+  display: flex;
+  gap: 20px;
+}
+
+.day-column {
+  flex: 1;
+}
+
+.period-cell {
+  background: #f4f6f9;
+  padding: 10px;
+  margin-bottom: 15px;
+  min-height: 120px;
+  border-radius: 8px;
+}
+
+.section-card {
+  background: #4e73df;
+  color: white;
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 6px;
+  cursor: grab;
+}
+
+.section-card:hover {
+  background: #2e59d9;
+}
+
+.code {
+  font-weight: bold;
+}
+
+.students {
+  font-size: 12px;
+}
+
+.card {
+  padding: 8px;
+  margin-top: 8px;
+  border-radius: 6px;
+  color: white;
+  cursor: grab;
+}
+
+.Lecture {
+  background: #e74a3b;
+}
+
+.Section {
+  background: #1cc88a;
+}
+
+.warning {
+  background: #ffe0e0;
+  padding: 10px;
+  margin: 15px 0;
+  border-radius: 6px;
+  color: #a30000;
+  font-weight: bold;
+}
