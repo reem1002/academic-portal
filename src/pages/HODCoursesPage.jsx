@@ -13,7 +13,7 @@ const HODCoursesPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [levelFilter, setLevelFilter] = useState("All");
     const [typeFilter, setTypeFilter] = useState("All");
-    const [statusFilter, setStatusFilter] = useState("All"); // All, Opened, Closed
+    const [statusFilter, setStatusFilter] = useState("All");
 
     const [countdown, setCountdown] = useState("");
 
@@ -152,7 +152,7 @@ const HODCoursesPage = () => {
                         min={1}
                         max={30}
                         onChange={(e) => setPreRegDays(Number(e.target.value))}
-                        style={{ width: "50px" }}
+                        style={{ width: "30px", height: "30px", borderRadius: "10px", padding: "1px 8px ", border: "1px solid #ccc" }}
                     />{" "}
                     days
                 </p>
@@ -200,10 +200,8 @@ const HODCoursesPage = () => {
                 <tbody>
                     {filteredCourses.map(course => {
                         let rowColor = "";
-                        if (course.isLocked) rowColor = "#f8d7da"; // أحمر لو Locked
-                        else if (course.enabled) rowColor = "#d1f0d1"; // أخضر لو Open
-                        // غيره يبقى proposed → بدون لون
-
+                        if (course.isLocked) rowColor = "#f8d7da";
+                        else if (course.enabled) rowColor = "#d1f0d1";
                         return (
                             <tr key={course.code} style={{ backgroundColor: rowColor }}>
                                 <td>

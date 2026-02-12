@@ -7,7 +7,7 @@
 
 .student-report-container h2 {
     margin-bottom: 25px;
-    color: #1f2937; /* داكن للعنوان */
+    color: #1f2937; 
 }
 
 .filters-container {
@@ -35,7 +35,7 @@
 }
 
 .export-btn {
-    padding: 8px 16px;
+    padding: 8px 20px !important;
     background-color: #3872f0;
     color: #fff;
     border: none;
@@ -44,6 +44,7 @@
     font-size: 14px;
     transition: background 0.2s;
     align-self:flex-start !important; 
+    height: 100%;
 }
 
 .export-btn:hover {
@@ -319,7 +320,7 @@
     border: 1px solid #ddd;
     outline: none;
     transition: 0.3s;
-    min-width: 200px;
+    min-width: 50px;
 }
 
 .filters-row input:focus,
@@ -475,4 +476,76 @@
     padding: 8px 15px;
     border-radius: 8px;
     cursor: pointer;
+}
+
+.view-toggle-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.view-toggle-btn:hover {
+    background: #f3f4f6;
+}
+
+/* ===== Table View ===== */
+.table-view {
+    background: transparent;
+    border-radius: 16px;
+    padding: 20px;
+    /* box-shadow: 0 6px 20px rgba(0,0,0,0.05); */
+}
+
+.courses-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.courses-table th,
+.courses-table td {
+    border: 1px solid #ccc;
+  padding: 10px;
+    text-align: left;
+   
+}
+
+.courses-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.courses-table tr:hover {
+    background: #f8fafc;
+}
+
+
+.view-toggle-btn {
+    
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+
+.view-toggle-btn:hover {
+    background: #f3f4f6;
+    /* transform: translateY(-2px); */
+}
+
+/* لون مختلف حسب الوضع */
+.view-toggle-btn.cards {
+    color: #2563eb;
+}
+
+.view-toggle-btn.table {
+    color: #059669;
 }

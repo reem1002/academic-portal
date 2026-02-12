@@ -6,9 +6,9 @@ const CourseDetailsPage = () => {
     const { code } = useParams();
     const [course, setCourse] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState("All"); // All, Graduate, Regular
+    const [statusFilter, setStatusFilter] = useState("All");
     const [showExportModal, setShowExportModal] = useState(false);
-    const [exportType, setExportType] = useState("all"); // <-- هنا عرفناه
+    const [exportType, setExportType] = useState("all");
     const [selectedColumns, setSelectedColumns] = useState({
         studentName: true,
         status: true,
@@ -97,7 +97,7 @@ const CourseDetailsPage = () => {
                 </div>
 
                 <button className="export-btn" onClick={() => setShowExportModal(true)}>
-                    Export Report
+                    Export
                 </button>
             </div>
 

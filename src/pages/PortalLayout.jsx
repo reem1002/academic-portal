@@ -35,7 +35,7 @@ const PortalLayout = () => {
             <div className="sidebar">
                 <div className="sidebar-top">
                     <img
-                        src="/images/department-logo.png" // ضع هنا مسار اللوجو
+                        src="/images/department-logo.png" 
                         alt="Department Logo"
                         className="sidebar-logo"
                     />

@@ -30,6 +30,7 @@
 .hod-search-input:focus,
 .hod-filters select:focus {
   border-color: #1890ff;
+    box-shadow: 0 0 3px #1890ff;
 }
 
 

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./styles/StudentSelectionsPage.css";
+import { FiGrid, FiList } from "react-icons/fi";
+
 
 const StudentSelectionsPage = () => {
     const [coursesData, setCoursesData] = useState([]);
@@ -8,7 +10,7 @@ const StudentSelectionsPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [typeFilter, setTypeFilter] = useState("All");
     const [visibleCount, setVisibleCount] = useState(6);
-
+    const [viewMode, setViewMode] = useState("cards");
     const [showExportModal, setShowExportModal] = useState(false);
     const [minimum, setMinimum] = useState(10);
     const [exportType, setExportType] = useState("all");
@@ -27,6 +29,7 @@ const StudentSelectionsPage = () => {
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
         const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
         const bylawCourses = JSON.parse(localStorage.getItem("bylawCourses")) || [];
+
 
         const snapshot = JSON.parse(localStorage.getItem("studentSelectionsSnapshot"));
         const useSnapshot = !preReg || preReg.status !== "open";
@@ -47,7 +50,7 @@ const StudentSelectionsPage = () => {
                     level: opened?.level || bylaw?.level || selection.level,
                     mandatory: bylaw?.mandatory ?? false,
                     isOpened: !!opened,
-                    isLocked: opened?.isLocked || false, // ✅ حالة القفل
+                    isLocked: opened?.isLocked || false, 
                     students: [],
                 };
             }
@@ -165,67 +168,105 @@ const StudentSelectionsPage = () => {
                         <option value="Mandatory">Mandatory</option>
                         <option value="Elective">Elective</option>
                     </select>
+                    <button
+                        className={`view-toggle-btn ${viewMode}`}
+                        onClick={() => setViewMode(viewMode === "cards" ? "table" : "cards")}
+                        title={viewMode === "cards" ? "Switch to Table View" : "Switch to Card View"}
+                    >
+                        {viewMode === "cards" ? <FiList size={20} /> : <FiGrid size={20} />}
+                    </button>
                     {filteredCourses.length > 0 && (
                         <button className="export-btn" onClick={() => setShowExportModal(true)}>Export</button>
                     )}
+
+
+
                 </div>
             </div>
 
             {/* ===== Courses Grid ===== */}
-            <div className="courses-grid">
-                {filteredCourses.length === 0 ? (
-                    <p>No courses with student selections yet.</p>
-                ) : (
-                    filteredCourses.slice(0, visibleCount).map(course => {
-                        const cardClass = `course-card ${course.isOpened ? "opened-card" : "proposed-card"}`;
-                        return (
-                            <div key={course.code} className="course-card-wrapper">
-                                <Link to={`/course/${course.code}`} className="course-card-link">
-                                    <div className={cardClass}>
-                                        <div className="card-header">
-                                            <h3>{course.name}</h3>
-                                            <span className="course-code">{course.code}</span>
-                                        </div>
-                                        <div className="card-body">
-                                            <div className="info-item">
-                                                <span className="label">Level</span>
-                                                <span>{course.level}</span>
+            {viewMode === "cards" ? (
+                <div className="courses-grid">
+                    {filteredCourses.length === 0 ? (
+                        <p>No courses with student selections yet.</p>
+                    ) : (
+                        filteredCourses.slice(0, visibleCount).map(course => {
+                            const cardClass = `course-card ${course.isOpened ? "opened-card" : "proposed-card"}`;
+                            return (
+                                <div key={course.code} className="course-card-wrapper">
+                                    <Link to={`/course/${course.code}`} className="course-card-link">
+                                        <div className={cardClass}>
+                                            <div className="card-header">
+                                                <h3>{course.name}</h3>
+                                                <span className="course-code">{course.code}</span>
                                             </div>
-                                            <div className="info-item">
-                                                <span className="label">Type</span>
-                                                <span>{course.mandatory ? "Mandatory" : "Elective"}</span>
-                                            </div>
-                                            <div className="info-item">
-                                                <span className="label">Students</span>
-                                                <span>{course.count}</span>
-                                            </div>
-                                            <div className="info-item">
-                                                <span className="label">Graduates</span>
-                                                <span>{course.graduateCount}</span>
-                                            </div>
-                                        </div>
-                                        <div className="card-footer">
-                                            <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
-                                                {course.isOpened ? "Opened by Doctor" : "Proposed by Students"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </Link>
 
+                                            <div className="card-body">
+                                                <div className="info-item">
+                                                    <span className="label">Level</span>
+                                                    <span>{course.level}</span>
+                                                </div>
+                                                <div className="info-item">
+                                                    <span className="label">Type</span>
+                                                    <span>{course.mandatory ? "Mandatory" : "Elective"}</span>
+                                                </div>
+                                                <div className="info-item">
+                                                    <span className="label">Students</span>
+                                                    <span>{course.count}</span>
+                                                </div>
+                                                <div className="info-item">
+                                                    <span className="label">Graduates</span>
+                                                    <span>{course.graduateCount}</span>
+                                                </div>
+                                            </div>
 
-                                {/* {course.isOpened && (
-                                    <button
-                                        className="lock-btn"
-                                        onClick={() => handleLockCourse(course.code)}
-                                    >
-                                        {course.isLocked ? "Unlock Course" : "Lock Course"}
-                                    </button>
-                                )} */}
-                            </div>
-                        );
-                    })
-                )}
-            </div>
+                                            <div className="card-footer">
+                                                <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
+                                                    {course.isOpened ? "Opened by Doctor" : "Proposed by Students"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            ) : (
+                <div className="table-view">
+                    <table className="courses-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Level</th>
+                                <th>Type</th>
+                                <th>Students</th>
+                                <th>Graduates</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredCourses.map(course => (
+                                <tr key={course.code}>
+                                    <td>{course.code}</td>
+                                    <td>{course.name}</td>
+                                    <td>{course.level}</td>
+                                    <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
+                                    <td>{course.count}</td>
+                                    <td>{course.graduateCount}</td>
+                                    <td>
+                                        <span className={`status-badge ${course.isOpened ? "opened" : "proposed"}`}>
+                                            {course.isOpened ? "Opened" : "Proposed"}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
 
             {/* ===== Show More ===== */}
             {visibleCount < filteredCourses.length && (

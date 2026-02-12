@@ -34,11 +34,16 @@ const PreRegistrationPage = () => {
                 setIsGraduating(userSelections[0].isGraduate || false);
             }
         } else {
-            setSelectedCourses([]);
+            setSelectedCourses(prev =>
+                prev.map(course => ({
+                    ...course,
+                    isGraduate: isGraduating
+                }))
+            );
+
         }
     }, []);
 
-    // كاونت داون للتسجيل
     useEffect(() => {
         if (!registrationEnd) return;
 
