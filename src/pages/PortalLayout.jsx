@@ -47,7 +47,7 @@ const PortalLayout = () => {
                 className="mobile-toggle"
                 onClick={() => setMobileOpen(true)}
             >
-                <FiMenu size={22} />
+                <FiMenu fontSize={20} />
             </button>
 
             {/* Overlay */}
@@ -70,7 +70,7 @@ const PortalLayout = () => {
                         className="collapse-btn"
                         onClick={() => setCollapsed(!collapsed)}
                     >
-                        <FiChevronLeft />
+                        <FiChevronLeft fontSize={20} />
                     </button>
 
                     {/* Logo Section */}
