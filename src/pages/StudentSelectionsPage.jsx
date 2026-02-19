@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./styles/StudentSelectionsPage.css";
 import { FiGrid, FiList } from "react-icons/fi";
-
+import { users } from "../data/users"; // بيانات كل الطلاب والـ role, completedCredits, regulation
 
 const StudentSelectionsPage = () => {
     const [coursesData, setCoursesData] = useState([]);
@@ -24,47 +24,75 @@ const StudentSelectionsPage = () => {
 
     const levels = ["All", "Freshman", "Sophomore", "Junior", "Senior"];
 
+    // 🔹 دالة لحساب حالة تخرج الطالب
+    const isStudentGraduating = (studentId) => {
+        const student = users.find(
+            u => u.academicId === studentId && u.userType === "Student"
+        );
+        if (!student) return false;
+
+        const requiredCredits = student.regulation === "old" ? 180 : 165;
+        const remaining = requiredCredits - (student.completedCredits || 0);
+
+        return remaining <= 18 && remaining > 0;
+    };
     useEffect(() => {
+        // جلب البيانات من localStorage
         const preReg = JSON.parse(localStorage.getItem("preRegistrationInfo"));
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
         const openedCourses = JSON.parse(localStorage.getItem("openedCourses")) || [];
         const bylawCourses = JSON.parse(localStorage.getItem("bylawCourses")) || [];
 
-
+        // لو pre-registration مقفول، نستخدم snapshot لو موجود
         const snapshot = JSON.parse(localStorage.getItem("studentSelectionsSnapshot"));
         const useSnapshot = !preReg || preReg.status !== "open";
 
         const selectionsToUse = useSnapshot && snapshot ? snapshot.studentSelections : studentSelections;
         const coursesToUse = useSnapshot && snapshot ? snapshot.courses : openedCourses;
 
+        // تجميع الـ selections حسب المادة
         const grouped = {};
 
         selectionsToUse.forEach((selection) => {
             if (!grouped[selection.code]) {
-                const opened = coursesToUse.find(c => c.code === selection.code && c.enabled);
+                // نجيب بيانات المادة من openedCourses أو bylawCourses
+                const opened = coursesToUse.find(c => c.code === selection.code);
                 const bylaw = bylawCourses.find(c => c.code === selection.code);
 
                 grouped[selection.code] = {
                     code: selection.code,
-                    name: opened?.name || bylaw?.name || selection.name,
-                    level: opened?.level || bylaw?.level || selection.level,
+                    name: opened?.name || bylaw?.name || selection.name || "Unknown",
+                    level: opened?.level || bylaw?.level || selection.level || "Unknown",
                     mandatory: bylaw?.mandatory ?? false,
-                    isOpened: !!opened,
-                    isLocked: opened?.isLocked || false, 
+                    isOpened: !!opened?.enabled,
+                    isLocked: opened?.isLocked || false,
                     students: [],
                 };
             }
             grouped[selection.code].students.push(selection);
         });
 
-        const result = Object.values(grouped).map((course) => ({
-            ...course,
-            count: course.students.length,
-            graduateCount: course.students.filter(s => s.isGraduate).length,
-        }));
+        // تحويل الـ grouped object لمصفوفة وحساب الـ count و graduateCount
+        const result = Object.values(grouped).map((course) => {
+            const graduateCount = course.students.filter(s => {
+                const student = users.find(u => u.academicId === s.studentId);
+                if (!student) return false;
+
+                const requiredCredits = student.regulation === "old" ? 180 : 165;
+                const remaining = requiredCredits - (student.completedCredits || 0);
+                return remaining <= 18 && remaining > 0;
+            }).length;
+
+            return {
+                ...course,
+                count: course.students.length,
+                graduateCount,
+            };
+        });
 
         setCoursesData(result);
     }, []);
+
 
     const filteredCourses = coursesData
         .filter((c) => (activeLevel === "All" ? true : c.level === activeLevel))
@@ -142,6 +170,7 @@ const StudentSelectionsPage = () => {
         <div className="selections-container">
             <h2>Student Course Selections</h2>
 
+
             {/* ===== Filters ===== */}
             <div className="selectionheading">
                 <div className="level-tabs">
@@ -178,9 +207,6 @@ const StudentSelectionsPage = () => {
                     {filteredCourses.length > 0 && (
                         <button className="export-btn" onClick={() => setShowExportModal(true)}>Export</button>
                     )}
-
-
-
                 </div>
             </div>
 
@@ -266,7 +292,6 @@ const StudentSelectionsPage = () => {
                     </table>
                 </div>
             )}
-
 
             {/* ===== Show More ===== */}
             {visibleCount < filteredCourses.length && (

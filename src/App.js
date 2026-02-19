@@ -8,6 +8,8 @@ import LoginPage from "./pages/LoginPage";
 import CourseDetailsPage from "./pages/CourseDetailsPage";
 import SemesterHistoryPage from "./pages/SemesterHistoryPage";
 import SchedulePage from "./pages/SchedulePage";
+import StudentsPage from "./pages/StudentsPage";
+import MyCourses from "./pages/MyCourses";
 
 
 function App() {
@@ -22,7 +24,8 @@ function App() {
           <Route path="student-selections" element={<StudentSelectionsPage />} />
           <Route path="/course/:code" element={<CourseDetailsPage />} />
           <Route path="/semester-history" element={<SemesterHistoryPage />} />
-
+          <Route path="/MyCourses" element={<MyCourses />} />
+          <Route path="/Students" element={<StudentsPage />} />
           <Route path="/s" element={<SchedulePage />} />
 
         </Route>

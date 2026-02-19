@@ -1,7 +1,7 @@
 .portal-container {
     display: flex;
     height: 100vh;
-    background: #f8fafc;
+    background: #f9f9f9;
 }
 
 /* Sidebar */
@@ -166,7 +166,7 @@
 .main-content {
     flex: 1;
     padding: 40px;
-    background: #f1f5f9;
+    background: #f9f9f9;
     overflow-y: auto;
 }
 

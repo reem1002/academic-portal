@@ -1,58 +1,82 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { users } from "../data/users";
+import "./styles/LoginPage.css";
 
 const LoginPage = () => {
-    const [role, setRole] = useState("student");
-    const [name, setName] = useState("");
+    const [nationalId, setNationalId] = useState("");
+    const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
     const handleLogin = () => {
-        if (!name) return alert("Enter your name");
-        const user = {
-            name,
-            role,
-            isGraduate: false, 
-        };
-        localStorage.setItem("currentUser", JSON.stringify(user));
+        const foundUser = users.find(
+            (u) =>
+                u.nationalId === nationalId &&
+                u.password === password
+        );
+
+        if (!foundUser) {
+            return alert("Invalid National ID or Password");
+        }
+
+        localStorage.setItem(
+            "currentUser",
+            JSON.stringify(foundUser)
+        );
+
         navigate("/");
     };
 
-
     return (
-        <div style={{ maxWidth: "400px", margin: "auto", padding: "50px" }}>
-            <h2>Login / Select Role</h2>
-            <input
-                type="text"
-                placeholder="Enter your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                style={{ width: "100%", marginBottom: "10px", padding: "8px" }}
-            />
-            <div style={{ marginBottom: "10px" }}>
-                <label>
+        <div className="login-page">
+            <div className="login-card">
+                <div className="login-header">
+                    <img
+                        src="/images/department-logo.png"
+                        alt="Department Logo"
+                        className="login-logo"
+                    />
+                    <div className="login-title">
+                        Academic Portal
+                    </div>
+                    <div className="login-subtitle">
+                        Electrical and Computer Engineering Department
+                    </div>
+                </div>
+
+                <div className="login-form">
                     <input
-                        type="radio"
-                        name="role"
-                        value="student"
-                        checked={role === "student"}
-                        onChange={() => setRole("student")}
-                    />{" "}
-                    Student
-                </label>
-                <label style={{ marginLeft: "20px" }}>
+                        type="text"
+                        placeholder="National ID"
+                        className="login-input"
+                        value={nationalId}
+                        onChange={(e) =>
+                            setNationalId(e.target.value)
+                        }
+                    />
+
                     <input
-                        type="radio"
-                        name="role"
-                        value="admin"
-                        checked={role === "admin"}
-                        onChange={() => setRole("admin")}
-                    />{" "}
-                    Head of Department
-                </label>
+                        type="password"
+                        placeholder="Password"
+                        className="login-input"
+                        value={password}
+                        onChange={(e) =>
+                            setPassword(e.target.value)
+                        }
+                    />
+
+                    <button
+                        className="login-button"
+                        onClick={handleLogin}
+                    >
+                        Login
+                    </button>
+                </div>
+
+                <div className="login-footer">
+                    © 2026 ECE
+                </div>
             </div>
-            <button onClick={handleLogin} style={{ padding: "10px 20px" }}>
-                Login
-            </button>
         </div>
     );
 };

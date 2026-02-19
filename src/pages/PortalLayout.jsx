@@ -7,6 +7,8 @@ import {
     FiClock,
     FiMenu,
     FiChevronLeft,
+    FiUsers,
+    FiBookOpen
 } from "react-icons/fi";
 import "./styles/PortalLayout.css";
 
@@ -31,12 +33,20 @@ const PortalLayout = () => {
         user.role === "student"
             ? [
                 { name: "Dashboard", path: "/", icon: <FiHome fontSize={20} /> },
-                { name: "Pre-Registration", path: "/pre-registration", icon: <FiBook fontSize={20} /> },
+                {
+                    name: "Pre-Registration", path: "/pre-registration", icon: <FiBookOpen fontSize={20} />
+                },
+                { name: "My Courses", path: "/MyCourses", icon: <FiBook fontSize={20} /> },
             ]
             : [
                 { name: "Dashboard", path: "/", icon: <FiHome fontSize={20} /> },
                 { name: "Course Management", path: "/hod-courses", icon: <FiBook fontSize={20} /> },
                 { name: "Semesters History", path: "/Semester-History", icon: <FiClock fontSize={20} /> },
+                {
+                    name: "Students", path: "/Students", icon: <FiUsers fontSize={20} />
+                },
+
+
             ];
 
     return (

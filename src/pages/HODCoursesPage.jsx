@@ -18,6 +18,22 @@ const HODCoursesPage = () => {
 
     const [countdown, setCountdown] = useState("");
 
+    const addAnnouncement = (message) => {
+        const existing =
+            JSON.parse(localStorage.getItem("announcements")) || [];
+
+        const newAnnouncement = {
+            message,
+            date: new Date().toLocaleString(),
+        };
+
+        localStorage.setItem(
+            "announcements",
+            JSON.stringify([newAnnouncement, ...existing])
+        );
+    };
+
+
     const startNewSemester = () => {
         const confirmStart = window.confirm(
             "Start a new semester? Previous data will be archived."
@@ -57,6 +73,9 @@ const HODCoursesPage = () => {
         setCourses(resetCourses);
         localStorage.setItem("openedCourses", JSON.stringify(resetCourses));
         setRegistrationInfo(null);
+
+        // 🔔 Announcement
+        addAnnouncement(`A new semester (${newSemesterId}) has started.`);
 
         alert(`New Semester Started: ${newSemesterId}`);
     };
@@ -101,17 +120,14 @@ const HODCoursesPage = () => {
     }, [registrationInfo]);
 
     const handleRegistrationEnd = () => {
-        // snapshot قبل الإغلاق
         const studentSelections = JSON.parse(localStorage.getItem("studentSelections")) || [];
 
-
-        // احفظ بيانات كل مادة مع الطلاب اللي مسجلين فيها وعدد الخريجين
         const snapshotCourses = courses.map(course => {
             const studentsInCourse = studentSelections.filter(s => s.code === course.code);
             return {
                 ...course,
-                students: studentsInCourse, // كل الطلاب المسجلين
-                graduates: studentsInCourse.filter(s => s.isGraduate).length, // عدد الخريجين
+                students: studentsInCourse,
+                graduates: studentsInCourse.filter(s => s.isGraduate).length,
             };
         });
 
@@ -123,13 +139,19 @@ const HODCoursesPage = () => {
 
         localStorage.setItem("studentSelectionsSnapshot", JSON.stringify(snapshot));
 
-        // اغلاق كل الكورسات
-        setCourses(prev => prev.map(c => ({ ...c, enabled: false })));
+        const closedCourses = courses.map(c => ({ ...c, enabled: false }));
+        setCourses(closedCourses);
+
         localStorage.removeItem("preRegistrationInfo");
-        localStorage.setItem("openedCourses", JSON.stringify(courses));
+        localStorage.setItem("openedCourses", JSON.stringify(closedCourses));
         setRegistrationInfo(null);
+
+        // 🔔 Announcement
+        addAnnouncement("Pre-registration has been CLOSED.");
+
         alert("Pre-registration has ended. Snapshot saved!");
     };
+
 
     const toggleCourseEnabled = (code) => {
         setCourses(prev =>
@@ -172,13 +194,25 @@ const HODCoursesPage = () => {
         const endDate = new Date();
         endDate.setDate(now.getDate() + preRegDays);
 
-        const info = { status: "open", publishDate: now.toISOString(), endDate: endDate.toISOString() };
+        const info = {
+            status: "open",
+            publishDate: now.toISOString(),
+            endDate: endDate.toISOString()
+        };
+
         localStorage.setItem("openedCourses", JSON.stringify(courses));
         localStorage.setItem("preRegistrationInfo", JSON.stringify(info));
 
         setRegistrationInfo(info);
+
+        // 🔔 Announcement
+        addAnnouncement(
+            `Pre-registration is now OPEN for ${preRegDays} days.`
+        );
+
         alert(`Courses published! Pre-registration is open for ${preRegDays} days.`);
     };
+
 
     const closeRegistrationNow = () => {
         handleRegistrationEnd();
@@ -192,11 +226,13 @@ const HODCoursesPage = () => {
         .filter(c => statusFilter === "All" || (statusFilter === "Opened" ? c.enabled : !c.enabled))
         .sort((a, b) => b.enabled - a.enabled);
 
+
+
     return (
         <div className="hod-container">
             <div className="hod-header">
                 <div>
-                    <h2>Head of Department – Course Management</h2>
+                    <h2>Course Management</h2>
                     <p className="semester-label">
                         Current Semester: <strong>{localStorage.getItem("currentSemester")}</strong>
                     </p>
@@ -257,52 +293,52 @@ const HODCoursesPage = () => {
                     <option value="Closed">Closed</option>
                 </select>
             </div>
-
-            <table className="hod-table">
-                <thead>
-                    <tr>
-                        <th>Open</th>
-                        <th>Locked</th>
-                        <th>Code</th>
-                        <th>Course Name</th>
-                        <th>Level</th>
-                        <th>Credits</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredCourses.map(course => {
-                        let rowColor = "";
-                        if (course.isLocked) rowColor = "#f8d7da";
-                        else if (course.enabled) rowColor = "#d1f0d1";
-                        return (
-                            <tr key={course.code} style={{ backgroundColor: rowColor }}>
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={course.enabled}
-                                        onChange={() => toggleCourseEnabled(course.code)}
-                                        disabled={course.isLocked}
-                                    />
-                                </td>
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={course.isLocked || false}
-                                        onChange={() => toggleCourseLocked(course.code)}
-                                    />
-                                </td>
-                                <td>{course.code}</td>
-                                <td>{course.name}</td>
-                                <td>{course.level}</td>
-                                <td>{course.credits}</td>
-                                <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
-                            </tr>
-                        )
-                    })}
-                </tbody>
-            </table>
-
+            <div className="table-container">
+                <table className="hod-table">
+                    <thead>
+                        <tr>
+                            <th>Open</th>
+                            <th>Locked</th>
+                            <th>Code</th>
+                            <th>Course Name</th>
+                            <th>Level</th>
+                            <th>Credits</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {filteredCourses.map(course => {
+                            let rowColor = "";
+                            if (course.isLocked) rowColor = "#f8d7da";
+                            else if (course.enabled) rowColor = "#d1f0d1";
+                            return (
+                                <tr key={course.code} style={{ backgroundColor: rowColor }}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={course.enabled}
+                                            onChange={() => toggleCourseEnabled(course.code)}
+                                            disabled={course.isLocked}
+                                        />
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={course.isLocked || false}
+                                            onChange={() => toggleCourseLocked(course.code)}
+                                        />
+                                    </td>
+                                    <td>{course.code}</td>
+                                    <td>{course.name}</td>
+                                    <td>{course.level}</td>
+                                    <td>{course.credits}</td>
+                                    <td>{course.mandatory ? "Mandatory" : "Elective"}</td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
             <button className="hod-publish-btn" onClick={publishCourses}>
                 {registrationInfo && registrationInfo.status === "open" ? "Update Courses" : "Publish Courses"}
             </button>
@@ -322,3 +358,4 @@ const HODCoursesPage = () => {
 };
 
 export default HODCoursesPage;
+
